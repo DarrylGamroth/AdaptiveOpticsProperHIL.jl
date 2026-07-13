@@ -1,0 +1,102 @@
+schema_version = 1
+suite_id = "adaptive-optics-proper-hil"
+suite_version = "1.0.0"
+description = "Warmed command-to-detector-pixels and command-to-Proper-science HIL latency matrix"
+
+[axes]
+backends = ["cpu", "amdgpu"]
+detectors = ["ccd", "cmos", "emccd", "saphira"]
+wfs = ["shack_hartmann", "pyramid"]
+science_arms = ["proper"]
+
+[defaults]
+resolution = 64
+n_act = 8
+n_lenslets = 8
+pupil_samples = 8
+warmup = 3
+samples = 20
+seconds = 2.0
+rng_seed = 20260713
+
+[thresholds.cpu]
+median_ratio = 1.35
+p95_ratio = 1.75
+allocation_ratio = 1.0
+max_extra_allocs = 0
+byte_ratio = 1.0
+max_extra_bytes = 0
+
+[thresholds.amdgpu]
+median_ratio = 1.50
+p95_ratio = 2.00
+allocation_ratio = 1.25
+max_extra_allocs = 64
+byte_ratio = 1.25
+max_extra_bytes = 65536
+
+[baselines]
+cpu = "baselines/hil-benchmark-matrix-v1-cpu.toml"
+amdgpu = "baselines/hil-benchmark-matrix-v1-amdgpu.toml"
+
+[[cases]]
+id = "shack_hartmann_ccd"
+kind = "wfs_detector"
+wfs = "shack_hartmann"
+detector = "ccd"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "shack_hartmann_cmos"
+kind = "wfs_detector"
+wfs = "shack_hartmann"
+detector = "cmos"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "shack_hartmann_emccd"
+kind = "wfs_detector"
+wfs = "shack_hartmann"
+detector = "emccd"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "shack_hartmann_saphira"
+kind = "wfs_detector"
+wfs = "shack_hartmann"
+detector = "saphira"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "pyramid_ccd"
+kind = "wfs_detector"
+wfs = "pyramid"
+detector = "ccd"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "pyramid_cmos"
+kind = "wfs_detector"
+wfs = "pyramid"
+detector = "cmos"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "pyramid_emccd"
+kind = "wfs_detector"
+wfs = "pyramid"
+detector = "emccd"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "pyramid_saphira"
+kind = "wfs_detector"
+wfs = "pyramid"
+detector = "saphira"
+backends = ["cpu", "amdgpu"]
+
+[[cases]]
+id = "proper_science_arm"
+kind = "proper_science"
+science_arm = "proper"
+backends = ["cpu", "amdgpu"]

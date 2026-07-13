@@ -1,0 +1,192 @@
+suite_version = "1.0.0"
+suite_id = "adaptive-optics-proper-hil"
+backend = "amdgpu"
+timestamp_utc = "2026-07-13T07:36:14.347"
+policy = "warmed steady-state command-to-pixels; evals=1; GPU synchronized; compilation excluded"
+schema_version = 1
+
+[parameters]
+resolution = 64
+samples = 20
+seconds = 2.0
+warmup = 3
+
+[environment]
+julia_threads = 1
+julia_version = "1.12.6"
+device = "HIPDevice(id=1, name=AMD Radeon Graphics, gcn_arch=gfx1030)"
+adaptive_optics_sim_version = "0.1.0"
+proper_version = "0.1.0"
+blas_threads = 8
+
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_ccd"
+wfs = "shack_hartmann"
+detector = "ccd"
+
+    [cases.output]
+    checksum = 2.4188137421588135e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 8.054076e6
+    max_ns = 1.1287022e7
+    samples = 20
+    mean_ns = 7.68842605e6
+    min_ns = 4.555974e6
+    median_allocs = 11562.0
+    median_bytes = 437400.0
+    p95_ns = 1.0584062850000001e7
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_cmos"
+wfs = "shack_hartmann"
+detector = "cmos"
+
+    [cases.output]
+    checksum = 2.4188136003499023e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 7.32764e6
+    max_ns = 9.956779e6
+    samples = 20
+    mean_ns = 6.9841118e6
+    min_ns = 4.297469e6
+    median_allocs = 11778.0
+    median_bytes = 442408.0
+    p95_ns = 9.8744311e6
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_emccd"
+wfs = "shack_hartmann"
+detector = "emccd"
+
+    [cases.output]
+    checksum = 2.4188137421588135e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 7.8978485e6
+    max_ns = 1.159561e7
+    samples = 20
+    mean_ns = 7.4484016e6
+    min_ns = 4.299464e6
+    median_allocs = 11634.0
+    median_bytes = 438552.0
+    p95_ns = 1.073504585e7
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_saphira"
+wfs = "shack_hartmann"
+detector = "saphira"
+
+    [cases.output]
+    checksum = 2.4188138429975586e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 7.370876e6
+    max_ns = 1.1858832e7
+    samples = 20
+    mean_ns = 7.25653605e6
+    min_ns = 4.311105e6
+    median_allocs = 11757.0
+    median_bytes = 444824.0
+    p95_ns = 1.1836123200000001e7
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_ccd"
+wfs = "pyramid"
+detector = "ccd"
+
+    [cases.output]
+    checksum = 3.650322473432617e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 1.1752815e6
+    max_ns = 3.346899e6
+    samples = 20
+    mean_ns = 1.3007544e6
+    min_ns = 1.146537e6
+    median_allocs = 4089.0
+    median_bytes = 164752.0
+    p95_ns = 1.4658524500000014e6
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_cmos"
+wfs = "pyramid"
+detector = "cmos"
+
+    [cases.output]
+    checksum = 3.6503222658691406e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 1.205513e6
+    max_ns = 4.106151e6
+    samples = 20
+    mean_ns = 1.3571815e6
+    min_ns = 1.182245e6
+    median_allocs = 4176.0
+    median_bytes = 169376.0
+    p95_ns = 1.4639834500000018e6
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_emccd"
+wfs = "pyramid"
+detector = "emccd"
+
+    [cases.output]
+    checksum = 3.650322473432617e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 1.1892925e6
+    max_ns = 3.209051e6
+    samples = 20
+    mean_ns = 1.2991829e6
+    min_ns = 1.166305e6
+    median_allocs = 4092.0
+    median_bytes = 164800.0
+    p95_ns = 1.3516271500000015e6
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_saphira"
+wfs = "pyramid"
+detector = "saphira"
+
+    [cases.output]
+    checksum = 3.650322617988281e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 1.294174e6
+    max_ns = 3.383788e6
+    samples = 20
+    mean_ns = 1.39814175e6
+    min_ns = 1.258738e6
+    median_allocs = 4451.0
+    median_bytes = 181456.0
+    p95_ns = 1.4640042500000014e6
+[[cases]]
+kind = "proper_science"
+id = "proper_science_arm"
+wfs = "none"
+detector = "none"
+
+    [cases.output]
+    checksum = 2268.535366723634
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 4.19523225e7
+    max_ns = 9.0013647e7
+    samples = 20
+    mean_ns = 4.803234695e7
+    min_ns = 1.5858072e7
+    median_allocs = 41827.0
+    median_bytes = 1.539624e6
+    p95_ns = 8.703784135000001e7

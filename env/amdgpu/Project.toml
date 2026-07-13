@@ -1,0 +1,22 @@
+[deps]
+AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
+AdaptiveOpticsProperHIL = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
+AdaptiveOpticsSim = "002fb5eb-ad68-44a0-adbe-b299bfc2febc"
+BenchmarkTools = "6e4b80f9-dd63-53aa-95a3-0cdb28fa8baf"
+JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
+Proper = "0686a737-3bdd-44da-9bf7-6692cf630078"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+AdaptiveOpticsProperHIL = {path = "../.."}
+AdaptiveOpticsSim = {path = "../../../AdaptiveOpticsSim.jl"}
+Proper = {url = "https://github.com/DarrylGamroth/Proper.jl.git", rev = "97f9eca538a361f5d700d095f6def7d21cd95eb3"}
+
+[compat]
+AMDGPU = "2.7"
+AdaptiveOpticsProperHIL = "0.1"
+AdaptiveOpticsSim = "0.1"
+BenchmarkTools = "1.6"
+JSON3 = "1"
+Proper = "0.1"
+julia = "1.12"

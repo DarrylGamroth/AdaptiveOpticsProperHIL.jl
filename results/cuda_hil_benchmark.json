@@ -1,0 +1,29 @@
+{
+    "meta": {
+        "timestamp_utc": "2026-05-03T22:50:50.812",
+        "backend": "cuda",
+        "resolution": 64,
+        "precision": "Float32",
+        "device": "NVIDIA RTX A2000"
+    },
+    "result": {
+        "policy": "combined AO command-to-Proper pixels HIL benchmark; BenchmarkTools warmed steady-state; TTFx excluded",
+        "stats": {
+            "median_ns": 789930,
+            "mean_ns": 883316.4,
+            "min_ns": 786840,
+            "max_ns": 1220430,
+            "samples": 5,
+            "median_allocs": 2492,
+            "median_bytes": 87712
+        },
+        "output": {
+            "psf_size": [
+                64,
+                64
+            ],
+            "sampling": 1.65e-5,
+            "step_index": 9
+        }
+    }
+}

@@ -1,0 +1,4 @@
+.julia/
+*.cov
+*.mem
+.DS_Store

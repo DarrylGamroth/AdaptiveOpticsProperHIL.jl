@@ -1,0 +1,192 @@
+suite_version = "1.0.0"
+suite_id = "adaptive-optics-proper-hil"
+backend = "cpu"
+timestamp_utc = "2026-07-13T07:33:58.177"
+policy = "warmed steady-state command-to-pixels; evals=1; GPU synchronized; compilation excluded"
+schema_version = 1
+
+[parameters]
+resolution = 64
+samples = 20
+seconds = 2.0
+warmup = 3
+
+[environment]
+julia_threads = 1
+julia_version = "1.12.6"
+device = "AMD Ryzen 7 6800H with Radeon Graphics"
+adaptive_optics_sim_version = "0.1.0"
+proper_version = "0.1.0"
+blas_threads = 8
+
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_ccd"
+wfs = "shack_hartmann"
+detector = "ccd"
+
+    [cases.output]
+    checksum = 2.4185855870711914e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 160520.5
+    max_ns = 171862.0
+    samples = 20
+    mean_ns = 161958.45
+    min_ns = 157495.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 171281.55
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_cmos"
+wfs = "shack_hartmann"
+detector = "cmos"
+
+    [cases.output]
+    checksum = 2.4185854423229492e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 159934.5
+    max_ns = 169687.0
+    samples = 20
+    mean_ns = 160631.85
+    min_ns = 157835.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 166841.75
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_emccd"
+wfs = "shack_hartmann"
+detector = "emccd"
+
+    [cases.output]
+    checksum = 2.4185855870711914e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 159308.5
+    max_ns = 167644.0
+    samples = 20
+    mean_ns = 160132.45
+    min_ns = 157656.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 162770.5
+[[cases]]
+kind = "wfs_detector"
+id = "shack_hartmann_saphira"
+wfs = "shack_hartmann"
+detector = "saphira"
+
+    [cases.output]
+    checksum = 2.418585685548535e10
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 165390.0
+    max_ns = 174256.0
+    samples = 20
+    mean_ns = 166062.6
+    min_ns = 161673.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 172486.15000000002
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_ccd"
+wfs = "pyramid"
+detector = "ccd"
+
+    [cases.output]
+    checksum = 3.650322572270508e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 682859.0
+    max_ns = 704359.0
+    samples = 20
+    mean_ns = 685856.7
+    min_ns = 678471.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 702018.2000000001
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_cmos"
+wfs = "pyramid"
+detector = "cmos"
+
+    [cases.output]
+    checksum = 3.650322352246094e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 677449.5
+    max_ns = 726441.0
+    samples = 20
+    mean_ns = 682807.65
+    min_ns = 671047.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 701560.5
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_emccd"
+wfs = "pyramid"
+detector = "emccd"
+
+    [cases.output]
+    checksum = 3.650322572270508e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 684317.0
+    max_ns = 757259.0
+    samples = 20
+    mean_ns = 692875.9
+    min_ns = 676828.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 722004.5
+[[cases]]
+kind = "wfs_detector"
+id = "pyramid_saphira"
+wfs = "pyramid"
+detector = "saphira"
+
+    [cases.output]
+    checksum = 3.6503227347265625e8
+    size = [16, 16]
+
+    [cases.stats]
+    median_ns = 686446.0
+    max_ns = 709399.0
+    samples = 20
+    mean_ns = 687510.35
+    min_ns = 675525.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 703649.6000000001
+[[cases]]
+kind = "proper_science"
+id = "proper_science_arm"
+wfs = "none"
+detector = "none"
+
+    [cases.output]
+    checksum = 2268.535568933701
+    size = [64, 64]
+
+    [cases.stats]
+    median_ns = 551267.5
+    max_ns = 572152.0
+    samples = 20
+    mean_ns = 552676.35
+    min_ns = 546865.0
+    median_allocs = 0.0
+    median_bytes = 0.0
+    p95_ns = 565251.2000000001
