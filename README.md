@@ -21,6 +21,7 @@ julia --project=. scripts/benchmark_matrix.jl cpu check
 - OPD units, sign, centering, and orientation at the package boundary
 - total-OPD handoff through `prop_add_phase`
 - combined command-to-pixels HIL runtime shape
+- a versioned lockstep TCP boundary for an external real-time controller
 - CPU by default, optional AMDGPU and CUDA scripts when hardware is available
 
 ## Preferred Handoff
@@ -120,9 +121,44 @@ checks use the per-backend median, p95, allocation, and byte thresholds declared
 in the contract. Baseline timings are host-specific evidence, not portable
 performance promises.
 
+## External RTC Harness
+
+`contracts/external-rtc-wire-v1.toml` defines the fixed-size binary protocol.
+Each cycle senses the current residual, sends one slopes frame, receives the
+same-sequence command frame, validates it, and stages the command for the next
+AO sample. Only one request is outstanding, so there is no hidden queue or
+batching policy. TCP_NODELAY is enabled.
+
+For local bring-up, start the deterministic mock RTC and the benchmark in
+separate processes. The default 64-pixel/8-actuator context uses 512 slopes and
+66 commands:
+
+```bash
+AOS_RTC_SLOPES=512 AOS_RTC_COMMANDS=66 \
+    julia --project=. scripts/mock_external_rtc.jl
+
+julia --project=. scripts/benchmark_external_rtc.jl
+```
+
+The benchmark reports repeated raw warmed cycle and transport samples,
+p50/p95/p99/max overall and per trial, deadline misses, and a separate
+steady-state allocation probe. It is a
+closed-loop request/response test: it measures response-dependent HIL latency,
+not open-loop RTC capacity. A completed-cycle deadline is observed and counted;
+the synchronous TCP read is not a failure watchdog, so a production launcher
+must close or restart a failed peer.
+
+The AO context currently defaults to CPU for HIL. A GPU context necessarily
+crosses a host/device boundary to reach a conventional network RTC and should
+be measured as a distinct deployment mode. Device-resident simulation remains
+the preferred GPU topology.
+
 ## Allocation Decision
 
 The CPU combined frame path is zero-allocation after warmup in the current
 reference harness. GPU host allocation counts are still non-zero because some
 CUDA.jl and AMDGPU.jl wrapper/synchronization paths allocate on the host; track
-those separately from CPU HIL loop ownership.
+those separately from CPU HIL loop ownership. The external TCP transaction also
+has its own small host allocation cost in Julia's socket layer; the external
+benchmark reports that separately and does not weaken the zero-allocation
+in-process CPU optical path.

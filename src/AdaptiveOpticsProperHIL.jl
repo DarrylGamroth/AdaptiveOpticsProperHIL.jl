@@ -7,6 +7,7 @@ using JSON3
 using LinearAlgebra
 using Proper
 using Random
+using Sockets
 using Statistics
 using TOML
 
@@ -33,6 +34,15 @@ export HILPayload,
     run_benchmark_matrix,
     write_benchmark_result,
     compare_benchmark_results
+
+export RTCProtocolError,
+    ExternalRTCHarness,
+    connect_external_rtc,
+    external_rtc_step!,
+    external_hil_step!,
+    rtc_cycle_metrics,
+    benchmark_external_rtc!,
+    serve_mock_rtc!
 
 struct HILPayload{O,P,T}
     opd_m::O
@@ -343,5 +353,6 @@ function write_result(path::AbstractString, result; meta=(;))
 end
 
 include("benchmark_matrix.jl")
+include("external_rtc.jl")
 
 end

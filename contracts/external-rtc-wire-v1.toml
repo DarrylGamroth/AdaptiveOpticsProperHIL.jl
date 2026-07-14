@@ -1,0 +1,60 @@
+schema_version = 1
+contract_id = "adaptive-optics-external-rtc-wire"
+wire_version = 1
+transport = "tcp"
+byte_order = "little_endian"
+request_response = "one slopes frame followed by one command frame with the same sequence"
+header_bytes = 32
+magic_ascii = "AORT"
+scalar_codes = { float32 = 1, float64 = 2 }
+message_kinds = { slopes = 1, commands = 2 }
+
+[[header_fields]]
+name = "magic"
+offset_bytes = 0
+type = "uint32"
+
+[[header_fields]]
+name = "version"
+offset_bytes = 4
+type = "uint16"
+
+[[header_fields]]
+name = "message_kind"
+offset_bytes = 6
+type = "uint16"
+
+[[header_fields]]
+name = "sequence"
+offset_bytes = 8
+type = "uint64"
+
+[[header_fields]]
+name = "sender_monotonic_timestamp_ns"
+offset_bytes = 16
+type = "uint64"
+
+[[header_fields]]
+name = "element_count"
+offset_bytes = 24
+type = "uint32"
+
+[[header_fields]]
+name = "scalar_code"
+offset_bytes = 28
+type = "uint16"
+
+[[header_fields]]
+name = "flags_reserved"
+offset_bytes = 30
+type = "uint16"
+
+[semantics]
+framing = "The configured element count and scalar type fix each message size; no dynamic-length messages are permitted."
+configuration = "Slopes count, command count, and scalar precision are configured out of band before connection."
+payload = "Immediately follows the 32-byte header as element_count contiguous IEEE-754 values in little-endian order."
+sequence = "The RTC command response must echo the slopes request sequence exactly."
+timestamp = "Informational sender-local monotonic time; clocks are not assumed synchronized."
+commands = "Commands must be finite and within the simulator-side configured absolute limit."
+deadline = "The harness records completed-cycle deadline misses; synchronous TCP reads are not a watchdog and may block if the peer fails."
+overload = "Only one request is outstanding. There is no hidden queue or frame batching."
