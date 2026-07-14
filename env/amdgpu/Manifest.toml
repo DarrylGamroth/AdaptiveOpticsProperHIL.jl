@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "31ff6e1d88804ee92ce1cb1a934b8b11246cbf3b"
+project_hash = "0dca50f66d1b4c14f5f36c6a12fe89bec78119ce"
 
 [[deps.AMDGPU]]
 deps = ["AbstractFFTs", "AcceleratedKernels", "Adapt", "Atomix", "BFloat16s", "CEnum", "ExprTools", "GPUArrays", "GPUCompiler", "GPUToolbox", "KernelAbstractions", "LLD_jll", "LLVM", "LLVM_jll", "Libdl", "LinearAlgebra", "Pkg", "PrecompileTools", "Preferences", "PrettyTables", "Printf", "ROCmDeviceLibs_jll", "Random", "Random123", "RandomNumbers", "SparseArrays", "StaticArraysCore", "Statistics", "UnsafeAtomics"]
@@ -60,7 +60,7 @@ weakdeps = ["SparseArrays", "StaticArrays"]
     AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AdaptiveOpticsProperHIL]]
-deps = ["AdaptiveOpticsSim", "BenchmarkTools", "Dates", "JSON3", "LinearAlgebra", "Proper", "Random", "Sockets", "Statistics", "TOML"]
+deps = ["AdaptiveOpticsSim", "Base64", "BenchmarkTools", "Dates", "HdrHistogram", "JSON3", "LinearAlgebra", "Proper", "Random", "Sockets", "Statistics", "TOML"]
 path = "../.."
 uuid = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
 version = "0.1.0"
@@ -160,6 +160,12 @@ deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "Zlib_j
 git-tree-sha1 = "d846411d1d7eb34739105f3d6fbba7c93beded3d"
 uuid = "b3e40c51-02ae-5482-8a39-3ace5868dcf4"
 version = "4.6.4+0"
+
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.8"
 
 [[deps.CommonSubexpressions]]
 deps = ["MacroTools"]
@@ -300,6 +306,20 @@ version = "3.0.0"
 git-tree-sha1 = "2eaa69a7cab70a52b9687c8bf950a5a93ec895ae"
 uuid = "076d061b-32b6-4027-95e0-9a2c6f6d7e74"
 version = "0.2.0"
+
+[[deps.HdrHistogram]]
+deps = ["Atomix", "Base64", "CodecZlib", "Printf"]
+git-tree-sha1 = "94cd89113cf615c4b0d015a2919dbc94df87e914"
+repo-rev = "cd42987e0739c06d29d20b4341f088b85e7a620c"
+repo-url = "https://github.com/DarrylGamroth/HdrHistogram.jl.git"
+uuid = "d0b8ac25-3072-4075-acf5-4a93ba78f71f"
+version = "0.4.0"
+
+    [deps.HdrHistogram.extensions]
+    HdrHistogramPlotsExt = "Plots"
+
+    [deps.HdrHistogram.weakdeps]
+    Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
@@ -781,6 +801,11 @@ version = "0.1.6"
 
     [deps.Tracy.weakdeps]
     TracyProfiler_jll = "0c351ed6-8a68-550e-8b79-de6f926da83c"
+
+[[deps.TranscodingStreams]]
+git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.11.3"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]

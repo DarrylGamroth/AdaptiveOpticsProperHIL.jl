@@ -76,7 +76,7 @@ host allocation count and bytes. CUDA is not a required v1 matrix axis because
 the current development environment no longer has access to the remote CUDA
 target.
 
-The local separate-process TCP loopback artifact at
+The pre-HdrHistogram local separate-process TCP loopback artifact at
 `results/external_rtc_loopback_2026-07-13.json` retained 200 samples in each of
 three trials. It measured a 225322 ns pooled cycle p50, 317875 ns p99, 36167 ns
 transport p50, and 107150 ns transport p99, with 32 allocated host bytes per
@@ -84,11 +84,14 @@ transaction and no completed-cycle misses against 1 ms. This is machine-local
 bring-up evidence, not a claim about an external RTC or network.
 
 The external RTC benchmark is intentionally separate from the optical matrix.
-It records repeated raw cycle and transport latencies, p50/p95/p99/max overall
-and per trial, completed-cycle deadline misses, and a steady-state allocation
-probe. Its request/response arrival model is closed-loop and therefore does
-not establish open-loop RTC
-capacity or overload behavior.
+New runs retain a compressed, mergeable HdrHistogram.jl distribution for each
+cycle and transport trial, report p50/p90/p95/p99/max, report p99.9 only with
+at least 10,000 samples per trial, count completed-cycle deadline misses, and
+run a separate steady-state allocation probe. Exact samples are optional for
+short-run diagnosis. HdrHistogram.jl is pinned directly to its GitHub source;
+no local checkout or published tag is required. The request/response arrival
+model remains closed-loop and uncorrected, so these distributions do not
+establish open-loop RTC capacity or overload behavior.
 
 ## Output API Decision
 

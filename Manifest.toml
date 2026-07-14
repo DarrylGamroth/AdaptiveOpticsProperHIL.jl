@@ -2,7 +2,7 @@
 
 julia_version = "1.12.6"
 manifest_format = "2.0"
-project_hash = "37d9425d2b4b394d597e007cf88ce91ae753ecd4"
+project_hash = "3fee40ab806d254caca876d48b360a3f44845e96"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -42,7 +42,7 @@ weakdeps = ["SparseArrays", "StaticArrays"]
     AdaptStaticArraysExt = "StaticArrays"
 
 [[deps.AdaptiveOpticsProperHIL]]
-deps = ["AdaptiveOpticsSim", "BenchmarkTools", "Dates", "JSON3", "LinearAlgebra", "Proper", "Random", "Sockets", "Statistics", "TOML"]
+deps = ["AdaptiveOpticsSim", "Base64", "BenchmarkTools", "Dates", "HdrHistogram", "JSON3", "LinearAlgebra", "Proper", "Random", "Sockets", "Statistics", "TOML"]
 path = "."
 uuid = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
 version = "0.1.0"
@@ -131,6 +131,12 @@ deps = ["Artifacts", "Bzip2_jll", "JLLWrappers", "LibCURL_jll", "Libdl", "Zlib_j
 git-tree-sha1 = "d846411d1d7eb34739105f3d6fbba7c93beded3d"
 uuid = "b3e40c51-02ae-5482-8a39-3ace5868dcf4"
 version = "4.6.4+0"
+
+[[deps.CodecZlib]]
+deps = ["TranscodingStreams", "Zlib_jll"]
+git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
+uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
+version = "0.7.8"
 
 [[deps.CommonSubexpressions]]
 deps = ["MacroTools"]
@@ -227,6 +233,20 @@ deps = ["Adapt"]
 git-tree-sha1 = "83cf05ab16a73219e5f6bd1bdfa9848fa24ac627"
 uuid = "46192b85-c4d5-4398-a991-12ede77f4527"
 version = "0.2.0"
+
+[[deps.HdrHistogram]]
+deps = ["Atomix", "Base64", "CodecZlib", "Printf"]
+git-tree-sha1 = "94cd89113cf615c4b0d015a2919dbc94df87e914"
+repo-rev = "cd42987e0739c06d29d20b4341f088b85e7a620c"
+repo-url = "https://github.com/DarrylGamroth/HdrHistogram.jl.git"
+uuid = "d0b8ac25-3072-4075-acf5-4a93ba78f71f"
+version = "0.4.0"
+
+    [deps.HdrHistogram.extensions]
+    HdrHistogramPlotsExt = "Plots"
+
+    [deps.HdrHistogram.weakdeps]
+    Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [[deps.IntelOpenMP_jll]]
 deps = ["Artifacts", "JLLWrappers", "LazyArtifacts", "Libdl"]
@@ -600,6 +620,11 @@ version = "1.13.0"
 deps = ["ArgTools", "SHA"]
 uuid = "a4e569a6-e804-4fa4-b0f3-eef7a1d5b13e"
 version = "1.10.0"
+
+[[deps.TranscodingStreams]]
+git-tree-sha1 = "0c45878dcfdcfa8480052b6ab162cdd138781742"
+uuid = "3bb67fe8-82b1-5028-8e26-92a6c54297fa"
+version = "0.11.3"
 
 [[deps.UUIDs]]
 deps = ["Random", "SHA"]

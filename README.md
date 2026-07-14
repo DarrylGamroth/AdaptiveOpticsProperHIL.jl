@@ -140,13 +140,23 @@ AOS_RTC_SLOPES=512 AOS_RTC_COMMANDS=66 \
 julia --project=. scripts/benchmark_external_rtc.jl
 ```
 
-The benchmark reports repeated raw warmed cycle and transport samples,
-p50/p95/p99/max overall and per trial, deadline misses, and a separate
-steady-state allocation probe. It is a
-closed-loop request/response test: it measures response-dependent HIL latency,
-not open-loop RTC capacity. A completed-cycle deadline is observed and counted;
-the synchronous TCP read is not a failure watchdog, so a production launcher
-must close or restart a failed peer.
+The benchmark records warmed cycle and transport latency distributions in
+fixed-range HdrHistogram.jl histograms, reports p50/p90/p95/p99/max overall and
+per trial, retains compressed mergeable histogram payloads, tracks deadline
+misses, and runs a separate steady-state allocation probe. P99 requires at
+least 1,000 samples per trial; p99.9 is emitted at 10,000 or more. Exact raw
+samples remain enabled by default and can be disabled for long runs with
+`AOS_RTC_RETAIN_RAW_SAMPLES=false`. Histogram range and precision can be set
+with `AOS_RTC_HISTOGRAM_MAX_NS` and `AOS_RTC_HISTOGRAM_SIGFIGS`.
+
+HdrHistogram.jl is resolved from the maintained GitHub source pinned in the
+project rather than from a local checkout or registry release. Histogram
+recording is raw and uncorrected. This remains a closed-loop request/response
+test: it measures response-dependent HIL latency, not open-loop RTC capacity,
+and histogram correction is not used as a substitute for a schedule-preserving
+load generator. A completed-cycle deadline is observed and counted; the
+synchronous TCP read is not a failure watchdog, so a production launcher must
+close or restart a failed peer.
 
 The AO context currently defaults to CPU for HIL. A GPU context necessarily
 crosses a host/device boundary to reach a conventional network RTC and should

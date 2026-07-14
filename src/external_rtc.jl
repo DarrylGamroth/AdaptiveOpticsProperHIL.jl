@@ -267,66 +267,82 @@ end
 Base.isopen(harness::ExternalRTCHarness) =
     !harness.closed && isopen(harness.socket)
 
-function _latency_summary(values::Vector{UInt64})
-    isempty(values) && throw(ArgumentError("latency sample set cannot be empty"))
-    sorted = sort(values)
-    return (
-        min_ns=first(sorted),
-        p50_ns=sorted[clamp(ceil(Int, 0.50 * length(sorted)), 1, end)],
-        p95_ns=sorted[clamp(ceil(Int, 0.95 * length(sorted)), 1, end)],
-        p99_ns=sorted[clamp(ceil(Int, 0.99 * length(sorted)), 1, end)],
-        max_ns=last(sorted),
-    )
-end
-
 """
     benchmark_external_rtc!(harness; warmup=10, samples=1_000, trials=3)
 
-Measure repeated warmed closed-loop request/response cycles. Raw samples are
-retained, tails are reported overall and per trial, and one separate
-steady-state allocation transaction is recorded.
+Measure repeated warmed closed-loop request/response cycles. Fixed-range,
+mergeable HdrHistogram distributions are retained for every trial, exact raw
+samples may optionally be retained, and one separate steady-state allocation
+transaction is recorded. Histogram recording is not included in the reported
+cycle latency and no coordinated-omission correction is applied.
 """
 function benchmark_external_rtc!(harness::ExternalRTCHarness;
     warmup::Integer=10,
     samples::Integer=1_000,
-    trials::Integer=3)
+    trials::Integer=3,
+    retain_raw_samples::Bool=true,
+    histogram_highest_trackable_ns::Integer=_DEFAULT_LATENCY_HIGHEST_TRACKABLE_NS,
+    histogram_significant_figures::Integer=_DEFAULT_LATENCY_SIGNIFICANT_FIGURES)
     warmup >= 0 || throw(ArgumentError("warmup must be >= 0"))
-    samples >= 100 ||
-        throw(ArgumentError("samples must be >= 100 to report p99"))
+    samples >= _P99_MIN_SAMPLES ||
+        throw(ArgumentError("samples must be >= $(_P99_MIN_SAMPLES) to report p99"))
     trials > 0 || throw(ArgumentError("trials must be > 0"))
+    histogram_params = LatencyHistogramParams(
+        highest_trackable_ns=histogram_highest_trackable_ns,
+        significant_figures=histogram_significant_figures,
+    )
     for _ in 1:Int(warmup)
         external_rtc_step!(harness)
     end
     allocated_bytes = @allocated external_rtc_step!(harness)
-    cycle_trials = [Vector{UInt64}(undef, Int(samples))
+    cycle_histograms = [LatencyHistogramState(histogram_params)
         for _ in 1:Int(trials)]
-    transport_trials = [similar(cycle_trials[1])
+    transport_histograms = [LatencyHistogramState(histogram_params)
         for _ in 1:Int(trials)]
+    cycle_trials = retain_raw_samples ?
+        [Vector{UInt64}(undef, Int(samples)) for _ in 1:Int(trials)] : nothing
+    transport_trials = retain_raw_samples ?
+        [Vector{UInt64}(undef, Int(samples)) for _ in 1:Int(trials)] : nothing
     misses_before = harness.deadline_misses
-    for trial in eachindex(cycle_trials)
-        cycle_latencies = cycle_trials[trial]
-        transport_latencies = transport_trials[trial]
-        for i in eachindex(cycle_latencies)
+    for trial in eachindex(cycle_histograms)
+        cycle_histogram = cycle_histograms[trial]
+        transport_histogram = transport_histograms[trial]
+        for i in 1:Int(samples)
             external_rtc_step!(harness)
-            cycle_latencies[i] = harness.last_cycle_ns
-            transport_latencies[i] = harness.last_transport_ns
+            record_latency!(cycle_histogram, harness.last_cycle_ns)
+            record_latency!(transport_histogram, harness.last_transport_ns)
+            if retain_raw_samples
+                cycle_trials[trial][i] = harness.last_cycle_ns
+                transport_trials[trial][i] = harness.last_transport_ns
+            end
         end
     end
-    cycle_latencies = vcat(cycle_trials...)
-    transport_latencies = vcat(transport_trials...)
+    pooled_cycle = LatencyHistogramState(histogram_params)
+    pooled_transport = LatencyHistogramState(histogram_params)
+    foreach(histogram -> merge_latency!(pooled_cycle, histogram), cycle_histograms)
+    foreach(histogram -> merge_latency!(pooled_transport, histogram), transport_histograms)
     return (
-        policy="closed-loop request/response; warmed; raw samples retained; no coordinated-omission correction",
+        policy="closed-loop request/response; warmed; raw uncorrected HdrHistograms retained; no coordinated-omission correction",
         warmup=Int(warmup),
         samples=Int(samples),
         trials=Int(trials),
-        cycle=_latency_summary(cycle_latencies),
-        transport=_latency_summary(transport_latencies),
-        cycle_by_trial=_latency_summary.(cycle_trials),
-        transport_by_trial=_latency_summary.(transport_trials),
+        cycle=latency_summary(pooled_cycle),
+        transport=latency_summary(pooled_transport),
+        cycle_by_trial=latency_summary.(cycle_histograms),
+        transport_by_trial=latency_summary.(transport_histograms),
         deadline_ns=harness.deadline_ns,
         deadline_misses=harness.deadline_misses - misses_before,
         allocated_bytes_per_cycle=allocated_bytes,
         allocation_probe_transactions=1,
+        histogram_policy=(
+            correction="none",
+            p99_min_samples=_P99_MIN_SAMPLES,
+            p99_9_min_samples=_P99_9_MIN_SAMPLES,
+            quantization="highest equivalent value at each percentile",
+        ),
+        cycle_histograms=latency_histogram_artifact.(cycle_histograms),
+        transport_histograms=latency_histogram_artifact.(transport_histograms),
+        retain_raw_samples=retain_raw_samples,
         cycle_latencies_ns=cycle_trials,
         transport_latencies_ns=transport_trials,
     )

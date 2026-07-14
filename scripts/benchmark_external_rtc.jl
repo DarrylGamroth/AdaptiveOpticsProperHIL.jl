@@ -11,6 +11,12 @@ samples = parse(Int, get(ENV, "AOS_RTC_SAMPLES", "1000"))
 trials = parse(Int, get(ENV, "AOS_RTC_TRIALS", "3"))
 deadline_ns = parse(Int, get(ENV, "AOS_RTC_DEADLINE_NS", "1000000"))
 command_limit = parse(Float64, get(ENV, "AOS_RTC_COMMAND_LIMIT", "1.0"))
+retain_raw_samples = lowercase(get(ENV, "AOS_RTC_RETAIN_RAW_SAMPLES", "true")) in
+    ("1", "true", "yes", "on")
+histogram_highest_trackable_ns = parse(Int,
+    get(ENV, "AOS_RTC_HISTOGRAM_MAX_NS", "3600000000000"))
+histogram_significant_figures = parse(Int,
+    get(ENV, "AOS_RTC_HISTOGRAM_SIGFIGS", "3"))
 
 ctx = build_hil_context(
     resolution=resolution,
@@ -28,6 +34,9 @@ try
         warmup=warmup,
         samples=samples,
         trials=trials,
+        retain_raw_samples=retain_raw_samples,
+        histogram_highest_trackable_ns=histogram_highest_trackable_ns,
+        histogram_significant_figures=histogram_significant_figures,
     )
     result_path = get(ENV, "AOS_RTC_RESULT", "")
     if isempty(result_path)
@@ -52,6 +61,10 @@ try
         println("cycle_p99_ns=", result.cycle.p99_ns)
         println("transport_p50_ns=", result.transport.p50_ns)
         println("transport_p99_ns=", result.transport.p99_ns)
+        if !isnothing(result.cycle.p99_9_ns)
+            println("cycle_p99_9_ns=", result.cycle.p99_9_ns)
+            println("transport_p99_9_ns=", result.transport.p99_9_ns)
+        end
         println("allocated_bytes_per_cycle=",
             result.allocated_bytes_per_cycle)
         println("deadline_misses=", result.deadline_misses)

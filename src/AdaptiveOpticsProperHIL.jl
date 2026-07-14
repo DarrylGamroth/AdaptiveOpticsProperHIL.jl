@@ -1,8 +1,10 @@
 module AdaptiveOpticsProperHIL
 
 using AdaptiveOpticsSim
+using Base64
 using BenchmarkTools
 using Dates
+using HdrHistogram
 using JSON3
 using LinearAlgebra
 using Proper
@@ -353,6 +355,7 @@ function write_result(path::AbstractString, result; meta=(;))
 end
 
 include("benchmark_matrix.jl")
+include("latency_histograms.jl")
 include("external_rtc.jl")
 
 end
