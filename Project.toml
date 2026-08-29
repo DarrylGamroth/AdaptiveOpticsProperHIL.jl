@@ -22,16 +22,9 @@ AdaptiveOpticsSim = {path = "../AdaptiveOpticsSim.jl"}
 HdrHistogram = {url = "https://github.com/DarrylGamroth/HdrHistogram.jl.git", rev = "cd42987e0739c06d29d20b4341f088b85e7a620c"}
 Proper = {url = "https://github.com/DarrylGamroth/Proper.jl.git", rev = "ec146b53ac39d56dc005795ae37176605c15cbe5"}
 
-[weakdeps]
-CalculonAlgorithms = "6785d3db-db0a-43ab-bf7e-9bc558dffef4"
-
-[extensions]
-AdaptiveOpticsProperHILCalculonAlgorithmsExt = "CalculonAlgorithms"
-
 [compat]
 AdaptiveOpticsSim = "0.1"
 BenchmarkTools = "1.6"
-CalculonAlgorithms = "0.1"
 HdrHistogram = "0.4"
 JSON3 = "1"
 Proper = "0.1"

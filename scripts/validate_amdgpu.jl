@@ -12,7 +12,12 @@ for name in sort(collect(keys(results)); by=String)
     println("  ", name, " max_abs=", results[name].max_abs, " rms=", results[name].rms)
 end
 
-hil = build_hil_context(backend=AdaptiveOpticsSim.AMDGPUBackend(), resolution=64, n_act=8, T=Float32)
+hil = build_hil_context(
+    backend=AdaptiveOpticsSim.Backends.AMDGPUBackend(),
+    resolution=64,
+    n_act=8,
+    T=Float32,
+)
 psf, sampling = hil_step!(hil)
 AMDGPU.synchronize()
 println("amdgpu_hil_smoke")

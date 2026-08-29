@@ -12,7 +12,12 @@ for name in sort(collect(keys(results)); by=String)
     println("  ", name, " max_abs=", results[name].max_abs, " rms=", results[name].rms)
 end
 
-hil = build_hil_context(backend=AdaptiveOpticsSim.CUDABackend(), resolution=64, n_act=8, T=Float32)
+hil = build_hil_context(
+    backend=AdaptiveOpticsSim.Backends.CUDABackend(),
+    resolution=64,
+    n_act=8,
+    T=Float32,
+)
 psf, sampling = hil_step!(hil)
 CUDA.synchronize()
 println("cuda_hil_smoke")

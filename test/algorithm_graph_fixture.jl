@@ -20,3 +20,19 @@ function pupil_intensity_prescription(
     Proper.prop_add_phase(wavefront, pupil_opd)
     return Proper.prop_end(wavefront, output)
 end
+
+function proper_test_graph(configuration, pupil_opd, pupil_amplitude)
+    return algorithm_graph(
+        (proper_propagation_node(:proper, configuration),);
+        name=:proper_test,
+        inputs=(
+            graph_input(:pupil_opd, :proper => :pupil_opd, pupil_opd),
+            graph_input(
+                :pupil_amplitude,
+                :proper => :pupil_amplitude,
+                pupil_amplitude,
+            ),
+        ),
+        outputs=(graph_output(:intensity, :proper => :output),),
+    )
+end

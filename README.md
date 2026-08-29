@@ -62,30 +62,55 @@ This bypasses per-frame keyword merging and model asset lookup. It requires a
 native Julia keyword prescription; upstream-style `PASSVALUE` remains a
 compatibility path on `prop_run`.
 
-## Calculon Algorithm Graphs
+## AOS Algorithm Graphs
 
-Loading `CalculonAlgorithms` enables an optional declaration that presents an
-ordinary Julia-native Proper prescription as one Calculon node. Construct the
-typed configuration, obtain its declaration, and use that declaration either
-directly through `CalculonAlgorithms.process!` or in
-`AdaptiveOpticsSim.AlgorithmGraphs`:
+An ordinary Julia-native Proper prescription can be one optional node in an
+`AdaptiveOpticsSim.AlgorithmGraphs` complete-frame graph. Construct its typed
+configuration and node directly:
 
 ```julia
 configuration = ProperPropagationConfiguration(
     science_prescription;
-    target=AdaptiveOpticsSim.Backends.HostComputeDevice(),
     resolution=128,
     diameter_m=8.0f0,
     wavelength_um=1.65f0,
 )
-declaration = proper_propagation_declaration(configuration)
+node = proper_propagation_node(:science_camera, configuration)
 ```
 
 The adapter prepares the prescription once and supplies `pupil_opd`,
 `pupil_amplitude`, `diameter_m`, `field`, `wavefront`, `output`, and
 `run_context` keyword bindings. `prepare_proper_assets` may be specialized for
 a prescription that needs prepared masks, plans, or scratch. Those assets stay
-in the workspace owner rather than the immutable Calculon plan.
+in the workspace owner rather than the immutable propagation plan.
+
+The graph's `prepare_algorithm_graph(...; target=...)` call selects the exact
+CPU, AMDGPU, or CUDA device. The scientific configuration therefore remains
+portable across targets. Julia code remains the unrestricted composition path
+for generated or conditional topology.
+
+TOML graphs can use a Proper node without naming or evaluating Julia code from
+the file. The application explicitly admits a prescription under one node-type
+name:
+
+```julia
+node_types = merge(
+    builtin_graph_node_types(),
+    (spiders_proper_f32=proper_propagation_node_factory(
+        spiders_prescription;
+        T=Float32,
+    ),),
+)
+definition = load_algorithm_graph(
+    "spiders.toml";
+    node_types=node_types,
+    bindings=(pupil_opd=opd, pupil_amplitude=pupil),
+)
+```
+
+The TOML node then uses `type = "spiders_proper_f32"`. This keeps the file
+declarative and reviewable while the Julia application remains responsible for
+the trusted prescription registry and large ndarray bindings.
 
 The OPD, amplitude, field, output, Proper workspace, and graph target use one
 element type, backend, and exact device. The graph never inserts a host/device
@@ -93,9 +118,9 @@ copy. A CPU RTC therefore consumes a GPU-generated product only through an
 explicit application-owned copy or prepared handoff after the graph output
 boundary.
 
-Focused conformance environments live under `test/calculon`,
-`test/calculon_amdgpu`, and `test/calculon_cuda`. The GPU fixtures execute the
-same declaration with scalar indexing disabled and compare the explicitly
+Focused conformance environments live under `test/algorithm_graph`,
+`test/algorithm_graph_amdgpu`, and `test/algorithm_graph_cuda`. The GPU fixtures
+execute the same node with scalar indexing disabled and compare the explicitly
 published host result with the CPU result.
 
 For a real instrument loop, pass total residual OPD when the AO package owns

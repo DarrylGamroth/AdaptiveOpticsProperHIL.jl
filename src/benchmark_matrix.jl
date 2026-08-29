@@ -219,14 +219,14 @@ end
 
 function _benchmark_backend(name::AbstractString)
     normalized = lowercase(name)
-    normalized == "cpu" && return AdaptiveOpticsSim.CPUBackend()
+    normalized == "cpu" && return AdaptiveOpticsSim.Backends.CPUBackend()
     normalized == "amdgpu" || throw(ArgumentError("unsupported benchmark backend $(name)"))
     amdgpu = _loaded_module("AMDGPU")
     amdgpu === nothing && throw(ArgumentError(
         "AMDGPU must be loaded before running the AMDGPU benchmark matrix"))
     functional = Base.invokelatest(getfield(amdgpu, :functional))
     functional || throw(ArgumentError("AMDGPU is not functional on this host"))
-    return AdaptiveOpticsSim.AMDGPUBackend()
+    return AdaptiveOpticsSim.Backends.AMDGPUBackend()
 end
 
 function _benchmark_device(backend::AbstractString)

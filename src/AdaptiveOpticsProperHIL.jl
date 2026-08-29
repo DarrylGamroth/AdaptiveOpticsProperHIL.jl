@@ -47,7 +47,8 @@ export RTCProtocolError,
     serve_mock_rtc!
 
 export ProperPropagationConfiguration,
-    proper_propagation_declaration,
+    proper_propagation_node,
+    proper_propagation_node_factory,
     prepare_proper_assets,
     reset_proper_assets!
 
@@ -205,9 +206,17 @@ function _segment_range(layout, label::Symbol)
     throw(ArgumentError("missing command segment $(label)"))
 end
 
-function build_hil_context(; backend=AdaptiveOpticsSim.CPUBackend(), T::Type{<:AbstractFloat}=Float32,
-    resolution::Int=128, n_act::Int=16, diameter::Real=8.0, science_wavelength_um::Real=1.65,
-    focal_length_m::Real=80.0, lyot_stop_norm::Real=0.9, rng_seed::Integer=20260503)
+function build_hil_context(;
+    backend=AdaptiveOpticsSim.Backends.CPUBackend(),
+    T::Type{<:AbstractFloat}=Float32,
+    resolution::Int=128,
+    n_act::Int=16,
+    diameter::Real=8.0,
+    science_wavelength_um::Real=1.65,
+    focal_length_m::Real=80.0,
+    lyot_stop_norm::Real=0.9,
+    rng_seed::Integer=20260503,
+)
     tel = AdaptiveOpticsSim.Telescope(
         resolution=resolution,
         diameter=diameter,

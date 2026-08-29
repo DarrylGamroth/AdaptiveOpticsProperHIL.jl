@@ -175,7 +175,11 @@ using Test
         defaults = matrix["defaults"]
         for case in matrix["cases"]
             case["kind"] == "wfs_detector" || continue
-            context = build_benchmark_case(case, CPUBackend(); defaults=defaults)
+            context = build_benchmark_case(
+                case,
+                AdaptiveOpticsSim.Backends.CPUBackend();
+                defaults=defaults,
+            )
             output = benchmark_case_step!(context)
             @test ndims(output) == 2
             @test all(isfinite, output)

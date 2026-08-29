@@ -21,9 +21,9 @@ This project validates the HIL seam between `AdaptiveOpticsSim.jl` and
    available when the Proper prescription intentionally owns the DM surface.
 6. External RTC lockstep validation through the versioned fixed-size TCP
    contract in `contracts/external-rtc-wire-v1.toml`.
-7. Direct and `AdaptiveOpticsSim.AlgorithmGraphs` execution of the optional
-   Calculon Proper declaration with exact CPU, AMDGPU, and CUDA target
-   admission.
+7. `AdaptiveOpticsSim.AlgorithmGraphs` execution of the optional AOS-native
+   Proper propagation node with exact CPU, AMDGPU, and CUDA target admission,
+   including declaration through the versioned TOML graph loader.
 
 ## Handoff Contract
 
@@ -39,10 +39,10 @@ The default cross-package contract is:
 - The repeated frame loop uses `Proper.prepare_run` plus `Proper.prop_run` so
   static model assets, slot lookup, and keyword merging
   are resolved before entering the loop.
-- The Calculon declaration binds the exact graph OPD, pupil-amplitude, and
+- The Proper graph node binds the exact graph OPD, pupil-amplitude, and
   output arrays after topology admission. Proper-specific scratch is prepared
   separately through `prepare_proper_assets`; it is not retained in the
-  immutable algorithm plan.
+  immutable propagation plan.
 - One prepared Proper node is homogeneous in numeric type, backend, and exact
   device. Mixed-type graph nodes remain valid elsewhere, but any GPU-to-host
   publication is an explicit boundary operation.
@@ -66,36 +66,37 @@ julia --project=. scripts/mock_external_rtc.jl
 julia --project=. scripts/benchmark_external_rtc.jl
 ```
 
-The optional Calculon test has its own environment:
+The optional graph-node test has its own environment:
 
 ```bash
-julia --project=test/calculon -e 'using Pkg; Pkg.instantiate()'
-julia --project=test/calculon test/calculon/runtests.jl
+julia --project=test/algorithm_graph -e 'using Pkg; Pkg.instantiate()'
+julia --project=test/algorithm_graph test/algorithm_graph/runtests.jl
 
-julia --project=test/calculon_amdgpu -e 'using Pkg; Pkg.instantiate()'
-julia --project=test/calculon_amdgpu test/calculon_amdgpu/runtests.jl
+julia --project=test/algorithm_graph_amdgpu -e 'using Pkg; Pkg.instantiate()'
+julia --project=test/algorithm_graph_amdgpu test/algorithm_graph_amdgpu/runtests.jl
 
-julia --project=test/calculon_cuda -e 'using Pkg; Pkg.instantiate()'
-julia --project=test/calculon_cuda test/calculon_cuda/runtests.jl
+julia --project=test/algorithm_graph_cuda -e 'using Pkg; Pkg.instantiate()'
+julia --project=test/algorithm_graph_cuda test/algorithm_graph_cuda/runtests.jl
 ```
 
-It develops this package, the sibling AdaptiveOpticsSim, Proper, and
-CalculonAlgorithms checkouts. The CPU test verifies direct and graph-bound
-execution, exact buffer admission, inference, and zero warmed allocation. The
-GPU tests additionally disable scalar indexing, compare the accelerator result
-with the CPU result, verify exact-device residency and graph buffer identity,
-reject a host buffer at accelerator admission, and publish the result through
-an explicit device-to-host copy after the graph boundary.
+It develops this package and the sibling AdaptiveOpticsSim and Proper
+checkouts. The CPU test verifies Julia- and TOML-declared graph execution,
+exact buffer admission, inference, and zero warmed allocation. The GPU tests
+additionally disable scalar indexing, compare the accelerator result with the
+CPU result, verify exact-device residency and graph buffer identity, reject a
+host buffer at accelerator admission, and publish the result through an
+explicit device-to-host copy after the graph boundary.
 
 ## Current Results
 
-The optional Calculon declaration passed its focused matrix on 2026-08-29:
+The AOS-native Proper graph node passed its focused matrix on 2026-08-29:
 
-- CPU: 22/22 checks on Julia 1.12.7.
-- AMDGPU: 20/20 checks on an AMD Radeon Graphics `gfx1030` device with
+- CPU: 19/19 checks on Julia 1.12.7, including equivalent direct-Julia and
+  TOML-defined topology.
+- AMDGPU: 13/13 checks on an AMD Radeon Graphics `gfx1030` device with
   AMDGPU.jl 2.8 and scalar indexing disabled.
-- CUDA: 20/20 checks on an NVIDIA GeForce RTX 3050 Ti Laptop GPU with CUDA.jl
-  6.3 and scalar indexing disabled.
+- CUDA: 13/13 checks on an NVIDIA GeForce RTX 3050 Ti Laptop GPU with CUDA.jl
+  6.3.1 and scalar indexing disabled.
 
 These checks establish functional equivalence and exact residency for the
 minimal pupil-OPD/pupil-amplitude prescription. They are not throughput,
