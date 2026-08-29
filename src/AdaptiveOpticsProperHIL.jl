@@ -46,6 +46,11 @@ export RTCProtocolError,
     benchmark_external_rtc!,
     serve_mock_rtc!
 
+export ProperPropagationConfiguration,
+    proper_propagation_declaration,
+    prepare_proper_assets,
+    reset_proper_assets!
+
 struct HILPayload{O,P,T}
     opd_m::O
     pupil::P
@@ -193,7 +198,7 @@ end
     return prop_propagate(wf, distance_m, run_context, name)
 end
 
-function _segment_range(layout::AdaptiveOpticsSim.RuntimeCommandLayout, label::Symbol)
+function _segment_range(layout, label::Symbol)
     for seg in AdaptiveOpticsSim.command_segments(layout)
         seg.label == label && return AdaptiveOpticsSim.command_segment_range(seg)
     end
@@ -259,7 +264,7 @@ function build_hil_context(; backend=AdaptiveOpticsSim.CPUBackend(), T::Type{<:A
     )
     mask_buffer = similar(AdaptiveOpticsSim.opd_map(sim.tel), T, resolution, resolution)
     output_buffer = similar(AdaptiveOpticsSim.opd_map(sim.tel), T, resolution, resolution)
-    science_hot_call = Proper.prepare_hot_call(
+    science_hot_call = Proper.prepare_run(
         science_model;
         slot=1,
         activate_context=false,
@@ -312,7 +317,7 @@ function ao_step!(ctx::HILContext)
     return AdaptiveOpticsSim.slopes(ctx.scenario)
 end
 
-science_step!(ctx::HILContext) = Proper.prop_run_hot(ctx.science_hot_call)
+science_step!(ctx::HILContext) = Proper.prop_run(ctx.science_hot_call)
 
 function hil_step!(ctx::HILContext)
     ao_step!(ctx)
@@ -357,5 +362,6 @@ end
 include("benchmark_matrix.jl")
 include("latency_histograms.jl")
 include("external_rtc.jl")
+include("proper_algorithm.jl")
 
 end

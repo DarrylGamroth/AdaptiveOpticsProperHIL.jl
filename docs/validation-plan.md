@@ -21,6 +21,9 @@ This project validates the HIL seam between `AdaptiveOpticsSim.jl` and
    available when the Proper prescription intentionally owns the DM surface.
 6. External RTC lockstep validation through the versioned fixed-size TCP
    contract in `contracts/external-rtc-wire-v1.toml`.
+7. Direct and `AdaptiveOpticsSim.AlgorithmGraphs` execution of the optional
+   Calculon Proper declaration with exact CPU, AMDGPU, and CUDA target
+   admission.
 
 ## Handoff Contract
 
@@ -33,9 +36,16 @@ The default cross-package contract is:
   keyword payload and applies it with `prop_add_phase`.
 - `PASSVALUE` is not used in native integration code; it remains a compatibility
   adapter for upstream PROPER-style models.
-- The repeated frame loop uses `Proper.prepare_hot_call` plus
-  `Proper.prop_run_hot` so static model assets, slot lookup, and keyword merging
+- The repeated frame loop uses `Proper.prepare_run` plus `Proper.prop_run` so
+  static model assets, slot lookup, and keyword merging
   are resolved before entering the loop.
+- The Calculon declaration binds the exact graph OPD, pupil-amplitude, and
+  output arrays after topology admission. Proper-specific scratch is prepared
+  separately through `prepare_proper_assets`; it is not retained in the
+  immutable algorithm plan.
+- One prepared Proper node is homogeneous in numeric type, backend, and exact
+  device. Mixed-type graph nodes remain valid elsewhere, but any GPU-to-host
+  publication is an explicit boundary operation.
 
 Use a DM-only surface only for prescriptions that deliberately model the rest
 of the optical train inside Proper and need to place the DM at a specific
@@ -55,6 +65,17 @@ julia --project=env/amdgpu scripts/benchmark_matrix.jl amdgpu check
 julia --project=. scripts/mock_external_rtc.jl
 julia --project=. scripts/benchmark_external_rtc.jl
 ```
+
+The optional Calculon test has its own environment:
+
+```bash
+julia --project=test/calculon -e 'using Pkg; Pkg.instantiate()'
+julia --project=test/calculon test/calculon/runtests.jl
+```
+
+It develops this package, the sibling AdaptiveOpticsSim, Proper, and
+CalculonAlgorithms checkouts. It verifies direct and graph-bound CPU execution,
+exact buffer admission, inference, and zero warmed allocation.
 
 ## Current Results
 

@@ -43,7 +43,7 @@ wavefront = Proper.prop_begin!(field_buffer, payload.diameter_m, 1.65f-6;
     beam_diam_fraction=1.0,
     context=run_context,
 )
-hot = Proper.prepare_hot_call(
+run = Proper.prepare_run(
     science_model;
     slot=1,
     activate_context=false,
@@ -55,12 +55,42 @@ hot = Proper.prepare_hot_call(
     run_context=run_context,
 )
 
-psf, sampling = Proper.prop_run_hot(hot)
+psf, sampling = Proper.prop_run(run)
 ```
 
 This bypasses per-frame keyword merging and model asset lookup. It requires a
 native Julia keyword prescription; upstream-style `PASSVALUE` remains a
 compatibility path on `prop_run`.
+
+## Calculon Algorithm Graphs
+
+Loading `CalculonAlgorithms` enables an optional declaration that presents an
+ordinary Julia-native Proper prescription as one Calculon node. Construct the
+typed configuration, obtain its declaration, and use that declaration either
+directly through `CalculonAlgorithms.process!` or in
+`AdaptiveOpticsSim.AlgorithmGraphs`:
+
+```julia
+configuration = ProperPropagationConfiguration(
+    science_prescription;
+    target=AdaptiveOpticsSim.Backends.HostComputeDevice(),
+    resolution=128,
+    diameter_m=8.0f0,
+    wavelength_um=1.65f0,
+)
+declaration = proper_propagation_declaration(configuration)
+```
+
+The adapter prepares the prescription once and supplies `pupil_opd`,
+`pupil_amplitude`, `diameter_m`, `field`, `wavefront`, `output`, and
+`run_context` keyword bindings. `prepare_proper_assets` may be specialized for
+a prescription that needs prepared masks, plans, or scratch. Those assets stay
+in the workspace owner rather than the immutable Calculon plan.
+
+The OPD, amplitude, field, output, Proper workspace, and graph target use one
+element type, backend, and exact device. The graph never inserts a host/device
+copy. A CPU RTC therefore consumes a GPU-generated product only through an
+explicit prepared handoff after the graph output boundary.
 
 For a real instrument loop, pass total residual OPD when the AO package owns
 atmosphere, telescope, and DM composition. Pass a DM-only sampled surface only

@@ -94,7 +94,10 @@ function _benchmark_wfs(name::AbstractString, tel, backend, ::Type{T}, defaults)
     return _benchmark_wfs(Val(symbol), tel, backend, T, defaults)
 end
 
-function _benchmark_output_assembler(wfs::AdaptiveOpticsSim.ShackHartmannWFS, scenario)
+function _benchmark_output_assembler(wfs, scenario)
+    hasproperty(wfs, :params) &&
+        hasproperty(getproperty(wfs, :params), :n_lenslets) ||
+        return DirectBenchmarkOutput()
     cube = AdaptiveOpticsSim.wfs_frame(scenario)
     n_lenslets = wfs.params.n_lenslets
     image = similar(cube, eltype(cube),
@@ -102,8 +105,6 @@ function _benchmark_output_assembler(wfs::AdaptiveOpticsSim.ShackHartmannWFS, sc
     fill!(image, zero(eltype(image)))
     return ShackHartmannBenchmarkOutput(image, n_lenslets)
 end
-
-@inline _benchmark_output_assembler(wfs, scenario) = DirectBenchmarkOutput()
 
 function build_benchmark_case(case_spec::AbstractDict, backend;
     defaults::AbstractDict, T::Type{<:AbstractFloat}=Float32)
