@@ -90,7 +90,8 @@ in the workspace owner rather than the immutable Calculon plan.
 The OPD, amplitude, field, output, Proper workspace, and graph target use one
 element type, backend, and exact device. The graph never inserts a host/device
 copy. A CPU RTC therefore consumes a GPU-generated product only through an
-explicit prepared handoff after the graph output boundary.
+explicit application-owned copy or prepared handoff after the graph output
+boundary.
 
 Focused conformance environments live under `test/calculon`,
 `test/calculon_amdgpu`, and `test/calculon_cuda`. The GPU fixtures execute the
