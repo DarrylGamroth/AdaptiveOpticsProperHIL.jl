@@ -71,13 +71,35 @@ The optional Calculon test has its own environment:
 ```bash
 julia --project=test/calculon -e 'using Pkg; Pkg.instantiate()'
 julia --project=test/calculon test/calculon/runtests.jl
+
+julia --project=test/calculon_amdgpu -e 'using Pkg; Pkg.instantiate()'
+julia --project=test/calculon_amdgpu test/calculon_amdgpu/runtests.jl
+
+julia --project=test/calculon_cuda -e 'using Pkg; Pkg.instantiate()'
+julia --project=test/calculon_cuda test/calculon_cuda/runtests.jl
 ```
 
 It develops this package, the sibling AdaptiveOpticsSim, Proper, and
-CalculonAlgorithms checkouts. It verifies direct and graph-bound CPU execution,
-exact buffer admission, inference, and zero warmed allocation.
+CalculonAlgorithms checkouts. The CPU test verifies direct and graph-bound
+execution, exact buffer admission, inference, and zero warmed allocation. The
+GPU tests additionally disable scalar indexing, compare the accelerator result
+with the CPU result, verify exact-device residency and graph buffer identity,
+reject a host buffer at accelerator admission, and publish the result through
+an explicit device-to-host copy after the graph boundary.
 
 ## Current Results
+
+The optional Calculon declaration passed its focused matrix on 2026-08-29:
+
+- CPU: 22/22 checks on Julia 1.12.7.
+- AMDGPU: 20/20 checks on an AMD Radeon Graphics `gfx1030` device with
+  AMDGPU.jl 2.8 and scalar indexing disabled.
+- CUDA: 20/20 checks on an NVIDIA GeForce RTX 3050 Ti Laptop GPU with CUDA.jl
+  6.3 and scalar indexing disabled.
+
+These checks establish functional equivalence and exact residency for the
+minimal pupil-OPD/pupil-amplitude prescription. They are not throughput,
+latency, or full SPIDERS prescription evidence.
 
 The original combined AO/Proper seam results remain under `results/`:
 

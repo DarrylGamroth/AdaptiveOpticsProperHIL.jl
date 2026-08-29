@@ -92,6 +92,11 @@ element type, backend, and exact device. The graph never inserts a host/device
 copy. A CPU RTC therefore consumes a GPU-generated product only through an
 explicit prepared handoff after the graph output boundary.
 
+Focused conformance environments live under `test/calculon`,
+`test/calculon_amdgpu`, and `test/calculon_cuda`. The GPU fixtures execute the
+same declaration with scalar indexing disabled and compare the explicitly
+published host result with the CPU result.
+
 For a real instrument loop, pass total residual OPD when the AO package owns
 atmosphere, telescope, and DM composition. Pass a DM-only sampled surface only
 when the Proper prescription intentionally owns the remaining optical error

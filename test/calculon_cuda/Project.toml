@@ -1,0 +1,21 @@
+[deps]
+AdaptiveOpticsProperHIL = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
+AdaptiveOpticsSim = "002fb5eb-ad68-44a0-adbe-b299bfc2febc"
+CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
+CalculonAlgorithms = "6785d3db-db0a-43ab-bf7e-9bc558dffef4"
+Proper = "0686a737-3bdd-44da-9bf7-6692cf630078"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[sources]
+AdaptiveOpticsProperHIL = {path = "../.."}
+AdaptiveOpticsSim = {path = "../../../AdaptiveOpticsSim.jl"}
+CalculonAlgorithms = {path = "../../../pipewire/calculon-algorithms/julia/CalculonAlgorithms"}
+Proper = {path = "../../../Proper.jl"}
+
+[compat]
+AdaptiveOpticsProperHIL = "0.1"
+AdaptiveOpticsSim = "0.1"
+CUDA = "6"
+CalculonAlgorithms = "0.1"
+Proper = "0.1"
+julia = "1.12"
