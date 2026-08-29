@@ -430,7 +430,7 @@ function CA.reset!(prepared::CA.PreparedAlgorithm{<:ProperPropagation})
 end
 
 
-function AOG._prepare_algorithm_instance(
+function AOG.prepare_algorithm_instance(
     ::Type{Declaration},
     configuration::Parent.ProperPropagationConfiguration{
         T,
@@ -451,13 +451,13 @@ function AOG._prepare_algorithm_instance(
     )
 end
 
-function AOG._algorithm_port_contracts(
+function AOG.algorithm_port_contracts(
     ::Type{Declaration},
     prototype::_ProperGraphPrototype{Declaration},
 ) where {T,Prescription,Target,Declaration<:ProperPropagation{T,Prescription,Target}}
     formats = prototype.formats
     return (
-        AOG._graph_port_contract(
+        AOG.graph_port_contract(
             :pupil_opd,
             :input,
             :data,
@@ -466,7 +466,7 @@ function AOG._algorithm_port_contracts(
             formats[1].schema,
             :column_major,
         ),
-        AOG._graph_port_contract(
+        AOG.graph_port_contract(
             :pupil_amplitude,
             :input,
             :data,
@@ -475,7 +475,7 @@ function AOG._algorithm_port_contracts(
             formats[2].schema,
             :column_major,
         ),
-        AOG._graph_port_contract(
+        AOG.graph_port_contract(
             :output,
             :output,
             :data,
@@ -487,7 +487,7 @@ function AOG._algorithm_port_contracts(
     )
 end
 
-function AOG._bind_algorithm_instance(
+function AOG.bind_algorithm_instance(
     ::Type{Declaration},
     prototype::_ProperGraphPrototype{Declaration},
     inputs::NamedTuple,
@@ -511,7 +511,7 @@ function AOG._bind_algorithm_instance(
     )
 end
 
-@inline function AOG._process_algorithm!(
+@inline function AOG.process_algorithm!(
     owner::_GraphBoundProperPropagation,
     outputs::NamedTuple,
     inputs::NamedTuple,
@@ -529,7 +529,7 @@ end
     return nothing
 end
 
-function AOG._reset_algorithm!(owner::_GraphBoundProperPropagation)
+function AOG.reset_algorithm!(owner::_GraphBoundProperPropagation)
     _reset_state!(owner.state)
     Parent.reset_proper_assets!(owner.plan.prescription, owner.invocation.assets)
     return nothing
