@@ -108,6 +108,21 @@ function ProperPropagationConfiguration(prescription; kwargs...)
 end
 
 """
+    prepare_proper_state(prescription, T)
+
+Prepare prescription-specific persistent scientific state. The default returns
+`nothing`. State is owned by the prepared graph node and is distinct from the
+immutable propagation plan and the replaceable scratch returned by
+[`prepare_proper_assets`](@ref).
+"""
+prepare_proper_state(prescription, ::Type) = nothing
+
+"""Reset prescription-specific persistent state at a serialized boundary."""
+reset_proper_state!(prescription, state) = state
+
+_proper_state_keywords(prescription, state) = NamedTuple()
+
+"""
     prepare_proper_assets(prescription, target, T, resolution, output_shape)
 
 Prepare a named tuple of prescription-specific keyword assets. The default is
@@ -148,9 +163,10 @@ struct _ProperPropagationPlan{
     rng_seed::UInt64
 end
 
-mutable struct _ProperPropagationState{RNG}
+mutable struct _ProperPropagationState{RNG,PrescriptionState}
     rng::RNG
     initial_rng::RNG
+    prescription::PrescriptionState
 end
 
 struct _ProperPropagationWorkspace{Context,Assets,Field,Wavefront,Run}
@@ -207,13 +223,21 @@ function _proper_plan(
     )
 end
 
-function _prepare_proper_state(seed::UInt64)
+function _prepare_proper_state(prescription, ::Type{T}, seed::UInt64) where {T}
     rng = Random.Xoshiro(seed)
-    return _ProperPropagationState(rng, copy(rng))
+    return _ProperPropagationState(
+        rng,
+        copy(rng),
+        prepare_proper_state(prescription, T),
+    )
 end
 
-@inline function _reset_proper_state!(state::_ProperPropagationState)
+@inline function _reset_proper_state!(
+    prescription,
+    state::_ProperPropagationState,
+)
     copy!(state.rng, state.initial_rng)
+    reset_proper_state!(prescription, state.prescription)
     return state
 end
 
@@ -255,6 +279,7 @@ const _STANDARD_PROPER_ASSET_KEYS = (
     :field,
     :wavefront,
     :output,
+    :prescription_state,
     :run_context,
 )
 
@@ -352,11 +377,15 @@ function _prepare_proper_workspace(
         output=output,
         run_context=run_context,
     )
+    state_keywords = _proper_state_keywords(
+        plan.prescription,
+        state.prescription,
+    )
     run = Proper.prepare_run(
         prescription;
         context=run_context,
         activate_context=false,
-        merge(assets, standard)...,
+        merge(assets, standard, state_keywords)...,
     )
     return _ProperPropagationWorkspace(
         run_context,
@@ -431,7 +460,7 @@ function _AOG.prepare_graph_node(
     target::_Backends.AbstractComputeDevice,
 ) where {T,Prescription}
     plan = _proper_plan(configuration, target)
-    state = _prepare_proper_state(plan.rng_seed)
+    state = _prepare_proper_state(plan.prescription, T, plan.rng_seed)
     workspace = _prepare_proper_workspace(
         plan,
         state,
@@ -455,7 +484,7 @@ end
 end
 
 function _AOG.reset_graph_node!(owner::_ProperPropagationOwner)
-    _reset_proper_state!(owner.state)
+    _reset_proper_state!(owner.plan.prescription, owner.state)
     reset_proper_assets!(owner.plan.prescription, owner.workspace.assets)
     return nothing
 end

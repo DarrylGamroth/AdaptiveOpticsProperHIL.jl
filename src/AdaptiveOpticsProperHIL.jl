@@ -49,6 +49,8 @@ export RTCProtocolError,
 export ProperPropagationConfiguration,
     proper_propagation_node,
     proper_propagation_node_factory,
+    prepare_proper_state,
+    reset_proper_state!,
     prepare_proper_assets,
     reset_proper_assets!
 
