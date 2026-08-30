@@ -203,7 +203,7 @@ configuration:
 profile = provisional_spiders_h_regular_profile(Float32)
 
 llowfs_configuration = provisional_spiders_llowfs_configuration(profile)
-scc_configuration = provisional_spiders_scc_configuration(profile)
+scc_configuration = provisional_spiders_chopped_scc_configuration(profile)
 
 for claim in spiders_configuration_claims(scc_configuration)
     @info "SPIDERS assumption" name=claim.name evidence=claim.evidence current_choice=claim.current_choice question=claim.qualification_question
@@ -243,7 +243,7 @@ shapes and provide future validation targets; a reference image or interaction
 matrix is not an optical transmission map and is not silently substituted for
 one.
 
-The two configuration builders provide executable first-order Proper
+The three configuration builders provide executable first-order Proper
 prescriptions for the existing TOML graphs. By default they embed a 128-by-128
 AOS pupil in a 512-by-512 propagation grid, leaving enough padded field for the
 off-axis SCC reference hole. They then apply:
@@ -258,11 +258,20 @@ off-axis SCC reference hole. They then apply:
   reference path for SCC; and
 - prepared camera rotation/resampling into the legacy product shape.
 
+`provisional_spiders_scc_configuration` freezes the reference path open or
+closed and is useful for optical debugging. The HIL path should normally use
+`provisional_spiders_chopped_scc_configuration`. Its persistent chopper state
+alternates one complete reference-open fringed exposure with one complete
+reference-closed unfringed exposure. The immutable plan owns the initial phase;
+the prepared state owns only the successfully completed frame sequence. Reset
+restores the initial phase.
+
 The pupil embedding, propagation, mask maps, and detector resampling use
 preallocated target-native buffers. A warmed CPU graph step allocates no Julia
 heap memory. The same prescription uses Proper's CPU/GPU-native operations.
 The local AMDGPU result agrees with the CPU result to less than `1.8e-6`
-maximum absolute intensity error for both paths with scalar indexing disabled;
+maximum absolute intensity error for the static paths with scalar indexing
+disabled. Both chopped phases also pass the shared CPU/GPU numerical tolerance;
 CUDA execution of these provisional prescriptions remains to be revalidated.
 
 This is a topology-preserving simulation surrogate, not an as-built optical
@@ -271,7 +280,8 @@ throughput, exposure, detector gain/noise/nonlinearity, bad pixels, saturation,
 distortion, measured aberrations, exact fold signs, or calibrated pixel
 registration. `spiders_configuration_claims(configuration)` combines all eight
 instrument-profile questions with four prescription-specific numerical
-assumptions so none of these defaults can disappear into implementation code.
+assumptions. A chopped configuration adds the frame-synchronization assumption,
+so none of these defaults can disappear into implementation code.
 
 Register the two prepared configurations with the existing graph files:
 
@@ -286,6 +296,30 @@ node_types = merge(
     ),
 )
 ```
+
+Drive the SCC graph once per complete camera exposure. After a successful step,
+query the exact frame identity before publishing it:
+
+```julia
+timestamp = step_graph_at!(scc_graph, scc_model_time_driver)
+status = spiders_chopper_frame_status(scc_graph, Val(:scc_optics))
+frame = graph_output(scc_graph, :scc_observation)
+sequence = spiders_chopper_sequence(status)
+phase = spiders_chopper_phase(status)
+```
+
+The application or PipeWire adapter publishes `frame` together with
+`timestamp`, `sequence`, and `phase`. It owns the transport metadata and any
+legacy CRED2 tag-pixel convention; the optical prescription does not overwrite
+a science pixel. The deployed sorter may then classify and difference the raw
+alternating frames. An in-process reference path can instead retain the latest
+frame of each phase and form `fringed - unfringed` in a separate node.
+
+The current model assumes the blade transition occurs outside each exposure.
+A future rolling-shutter strategy can retain the same atomic output boundary
+while integrating each row over its own exposure interval, including the
+time-varying chopper aperture, turbulence, and applied DM state. No partially
+read detector frame should become graph-visible.
 
 The primary closed-loop HIL path is therefore:
 

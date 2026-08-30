@@ -5,8 +5,9 @@
 # configuration owns the physical prescription, propagation-grid size,
 # rectangular observation shape, wavelength, output units/schema, and any
 # prepared instrument assets. This topology file deliberately does not invent
-# the missing SPIDERS optical prescription, SCC chopper state, or detector
-# calibration.
+# the missing SPIDERS optical prescription, initial SCC chopper phase, or
+# detector calibration. A registered chopped prescription owns the phase state;
+# the application owns its model-time cadence.
 #
 # The surrounding AOS simulation receives one complete 468-coordinate PDM
 # command from the external RTC, applies the measured DM response, and renders

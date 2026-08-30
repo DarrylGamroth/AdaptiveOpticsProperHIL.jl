@@ -100,19 +100,22 @@ explicit device-to-host copy after the graph boundary.
 The AOS-native Proper graph node and provisional SPIDERS prescriptions passed
 their focused matrix on 2026-08-29:
 
-- CPU: 122/122 checks on Julia 1.12.7. These include equivalent direct-Julia
+- CPU: 165/165 checks on Julia 1.12.7. These include equivalent direct-Julia
   and TOML-defined topology, distinct pupil and propagation grids, rectangular
   output, provisional-profile provenance, both executable SPIDERS paths,
-  response to a deterministic pupil tilt, inference, and zero warmed
-  graph-step allocation.
-- AMDGPU: 46/46 checks on an AMD Radeon Graphics `gfx1030` device with
+  synchronized fringed/unfringed SCC alternation, model-time/phase alignment,
+  reset and exhaustion behavior, response to a deterministic pupil tilt,
+  inference, and zero warmed graph-step allocation.
+- AMDGPU: 63/63 checks on an AMD Radeon Graphics `gfx1030` device with
   AMDGPU.jl 2.8 and scalar indexing disabled. Both 512-grid SPIDERS paths keep
-  every prepared array on the selected device and agree with CPU to less than
-  `1.8e-6` maximum absolute intensity error.
+  every prepared array on the selected device. The static paths agree with CPU
+  to less than `1.8e-6` maximum absolute intensity error, and both chopped
+  phases pass the shared CPU/GPU numerical tolerance.
 - CUDA: the earlier 18/18 generic-node checks passed on an NVIDIA GeForce RTX
   3050 Ti Laptop GPU with CUDA.jl 6.3.1 and scalar indexing disabled. The
-  shared CUDA fixture now includes the provisional SPIDERS paths, but that
-  expanded fixture has not been rerun on CUDA hardware at this revision.
+  shared CUDA fixture now includes the static and chopped provisional SPIDERS
+  paths, but that expanded fixture has not been rerun on CUDA hardware at this
+  revision.
 
 These checks establish functional execution, allocation behavior, and exact
 residency for the tested configurations. They validate the declarative

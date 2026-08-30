@@ -12,16 +12,18 @@ Typed construction configuration for one AOS-native Proper propagation node.
 
 The prescription receives `(wavelength_m, resolution)` and the prepared
 keywords `pupil_opd`, `pupil_amplitude`, `diameter_m`, `field`, `wavefront`,
-`output`, and `run_context`. It must write `output` and return the usual Proper
-`(output, sampling_m)` result. `resolution` fixes the square Proper wavefront
-grid. `pupil_resolution` independently fixes both square pupil inputs and
-defaults to `resolution`; a padded prescription must explicitly embed or
-resample those inputs into its prepared propagation-grid scratch. `output_rows`
-and `output_columns` independently declare the caller-visible result and
-default to `resolution`. A prescription that uses a different camera shape
-must perform its prepared crop, resampling, or detector mapping into `output`
-itself. The containing algorithm graph selects the exact CPU or GPU target;
-every ndarray used by this node has one element type and that same target.
+`output`, and `run_context`. A prescription with non-`nothing` state also
+receives that object as `prescription_state`. It must write `output` and return
+the usual Proper `(output, sampling_m)` result. `resolution` fixes the square
+Proper wavefront grid. `pupil_resolution` independently fixes both square
+pupil inputs and defaults to `resolution`; a padded prescription must
+explicitly embed or resample those inputs into its prepared propagation-grid
+scratch. `output_rows` and `output_columns` independently declare the
+caller-visible result and default to `resolution`. A prescription that uses a
+different camera shape must perform its prepared crop, resampling, or detector
+mapping into `output` itself. The containing algorithm graph selects the exact
+CPU or GPU target; every ndarray used by this node has one element type and
+that same target.
 """
 struct ProperPropagationConfiguration{
     T<:Union{Float32,Float64},
@@ -113,14 +115,16 @@ end
 Prepare prescription-specific persistent scientific state. The default returns
 `nothing`. State is owned by the prepared graph node and is distinct from the
 immutable propagation plan and the replaceable scratch returned by
-[`prepare_proper_assets`](@ref).
+[`prepare_proper_assets`](@ref). A non-`nothing` result is passed to the
+prepared prescription as the `prescription_state` keyword on every run.
 """
 prepare_proper_state(prescription, ::Type) = nothing
 
 """Reset prescription-specific persistent state at a serialized boundary."""
 reset_proper_state!(prescription, state) = state
 
-_proper_state_keywords(prescription, state) = NamedTuple()
+@inline _proper_state_keywords(::Nothing) = NamedTuple()
+@inline _proper_state_keywords(state) = (prescription_state=state,)
 
 """
     prepare_proper_assets(prescription, target, T, resolution, output_shape)
@@ -377,10 +381,7 @@ function _prepare_proper_workspace(
         output=output,
         run_context=run_context,
     )
-    state_keywords = _proper_state_keywords(
-        plan.prescription,
-        state.prescription,
-    )
+    state_keywords = _proper_state_keywords(state.prescription)
     run = Proper.prepare_run(
         prescription;
         context=run_context,

@@ -357,14 +357,10 @@ end
 end
 
 function _spiders_surrogate_masks(
-    prescription::Union{
-        ProvisionalSpidersLLOWFSPrescription{T},
-        ProvisionalSpidersSCCPrescription{T},
-    },
+    profile::ProvisionalSpidersProfile{T},
+    parameters::SpidersSurrogateParameters{T},
     resolution::Int,
 ) where {T}
-    profile = prescription.profile
-    parameters = prescription.parameters
     optics = profile.optics
     beam_radius_pixels = T(resolution) *
         parameters.beam_diameter_fraction / T(2)
@@ -477,6 +473,54 @@ function _spiders_target_array(target, values::Matrix{T}) where {T}
     return prepared
 end
 
+function _prepare_spiders_common_assets(
+    profile::ProvisionalSpidersProfile{T},
+    parameters::SpidersSurrogateParameters{T},
+    target,
+    resolution::Int,
+) where {T}
+    masks = _spiders_surrogate_masks(profile, parameters, resolution)
+    focal_plane_mask_internal = Proper.prop_shift_center(
+        masks.focal_plane_mask;
+        inverse=true,
+    )
+    square_intensity = _Backends.allocate_device_array(
+        target,
+        T,
+        resolution,
+        resolution,
+    )
+    rotated_intensity = similar(square_intensity)
+    centered_field = _Backends.allocate_device_array(
+        target,
+        Complex{T},
+        resolution,
+        resolution,
+    )
+    padded_pupil_opd = similar(square_intensity)
+    padded_pupil_amplitude = similar(square_intensity)
+    fill!(square_intensity, zero(T))
+    fill!(rotated_intensity, zero(T))
+    fill!(centered_field, zero(Complex{T}))
+    fill!(padded_pupil_opd, zero(T))
+    fill!(padded_pupil_amplitude, zero(T))
+    assets = (
+        apodizer_mask=_spiders_target_array(target, masks.apodizer),
+        focal_plane_mask_internal=_spiders_target_array(
+            target,
+            focal_plane_mask_internal,
+        ),
+        padded_pupil_opd,
+        padded_pupil_amplitude,
+        square_intensity,
+        rotated_intensity,
+        centered_field,
+        pupil_resample_context=Proper.RunContext(typeof(square_intensity)),
+        detector_resample_context=Proper.RunContext(typeof(square_intensity)),
+    )
+    return masks, assets
+end
+
 @inline _spiders_output_shape(
     prescription::ProvisionalSpidersLLOWFSPrescription,
 ) = prescription.profile.llowfs_output_shape
@@ -499,51 +543,20 @@ function prepare_proper_assets(
     output_shape == expected_shape || throw(DimensionMismatch(
         "SPIDERS output shape $output_shape does not match $expected_shape",
     ))
-    masks = _spiders_surrogate_masks(prescription, resolution)
-    focal_plane_mask_internal = Proper.prop_shift_center(
-        masks.focal_plane_mask;
-        inverse=true,
+    masks, assets = _prepare_spiders_common_assets(
+        prescription.profile,
+        prescription.parameters,
+        target,
+        resolution,
     )
     lyot = _spiders_lyot_mask(
         prescription,
         masks.main_lyot,
         masks.reference_hole,
     )
-    square_intensity = _Backends.allocate_device_array(
-        target,
-        T,
-        resolution,
-        resolution,
-    )
-    rotated_intensity = similar(square_intensity)
-    centered_field = _Backends.allocate_device_array(
-        target,
-        Complex{T},
-        resolution,
-        resolution,
-    )
-    padded_pupil_opd = similar(square_intensity)
-    padded_pupil_amplitude = similar(square_intensity)
-    fill!(square_intensity, zero(T))
-    fill!(rotated_intensity, zero(T))
-    fill!(centered_field, zero(Complex{T}))
-    fill!(padded_pupil_opd, zero(T))
-    fill!(padded_pupil_amplitude, zero(T))
-    return (
-        apodizer_mask=_spiders_target_array(target, masks.apodizer),
-        focal_plane_mask_internal=_spiders_target_array(
-            target,
-            focal_plane_mask_internal,
-        ),
+    return merge(assets, (
         lyot_mask=_spiders_target_array(target, lyot),
-        padded_pupil_opd,
-        padded_pupil_amplitude,
-        square_intensity,
-        rotated_intensity,
-        centered_field,
-        pupil_resample_context=Proper.RunContext(typeof(square_intensity)),
-        detector_resample_context=Proper.RunContext(typeof(square_intensity)),
-    )
+    ))
 end
 
 @inline _spiders_rotate_camera(
@@ -553,8 +566,8 @@ end
     run_context,
 ) = square_intensity
 
-@inline function _spiders_rotate_camera(
-    prescription::ProvisionalSpidersSCCPrescription,
+@inline function _spiders_rotate_scc_camera(
+    profile::ProvisionalSpidersProfile,
     square_intensity,
     rotated_intensity,
     run_context,
@@ -562,11 +575,23 @@ end
     Proper.prop_rotate!(
         rotated_intensity,
         square_intensity,
-        prescription.profile.optics.camera_rotation_deg,
+        profile.optics.camera_rotation_deg,
         run_context,
     )
     return rotated_intensity
 end
+
+@inline _spiders_rotate_camera(
+    prescription::ProvisionalSpidersSCCPrescription,
+    square_intensity,
+    rotated_intensity,
+    run_context,
+) = _spiders_rotate_scc_camera(
+    prescription.profile,
+    square_intensity,
+    rotated_intensity,
+    run_context,
+)
 
 @inline function _spiders_camera_plane!(
     prescription::ProvisionalSpidersLLOWFSPrescription,
@@ -585,22 +610,34 @@ end
     return wavefront
 end
 
-@inline function _spiders_camera_plane!(
-    prescription::ProvisionalSpidersSCCPrescription,
+@inline function _spiders_scc_camera_plane!(
+    profile::ProvisionalSpidersProfile,
+    parameters::SpidersSurrogateParameters,
     wavefront,
     run_context,
 )
-    prescription.profile.scc_plane === :pupil_plane && return wavefront
-    focal_length = prescription.profile.optics.l2_focal_length_m
+    profile.scc_plane === :pupil_plane && return wavefront
+    focal_length = profile.optics.l2_focal_length_m
     _prop_lens!(wavefront, focal_length, run_context, "SCC camera relay")
     _prop_propagate!(
         wavefront,
-        focal_length + prescription.parameters.detector_defocus_m,
+        focal_length + parameters.detector_defocus_m,
         run_context,
         "SCC detector",
     )
     return wavefront
 end
+
+@inline _spiders_camera_plane!(
+    prescription::ProvisionalSpidersSCCPrescription,
+    wavefront,
+    run_context,
+) = _spiders_scc_camera_plane!(
+    prescription.profile,
+    prescription.parameters,
+    wavefront,
+    run_context,
+)
 
 function _run_provisional_spiders_prescription(
     prescription,

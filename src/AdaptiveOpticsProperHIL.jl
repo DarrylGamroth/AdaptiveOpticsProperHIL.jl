@@ -69,12 +69,23 @@ export SpidersEvidenceLevel,
     spiders_profile_claims,
     spiders_profile_is_provisional,
     SpidersSurrogateParameters,
+    SpidersChopperPhase,
+    SpidersUnfringed,
+    SpidersFringed,
+    SpidersChopperPlan,
+    SpidersChopperFrameStatus,
     ProvisionalSpidersLLOWFSPrescription,
     ProvisionalSpidersSCCPrescription,
+    ProvisionalSpidersChoppedSCCPrescription,
     PROVISIONAL_SPIDERS_LLOWFS_SCHEMA,
     PROVISIONAL_SPIDERS_SCC_SCHEMA,
+    PROVISIONAL_SPIDERS_CHOPPED_SCC_SCHEMA,
     provisional_spiders_llowfs_configuration,
     provisional_spiders_scc_configuration,
+    provisional_spiders_chopped_scc_configuration,
+    spiders_chopper_frame_status,
+    spiders_chopper_sequence,
+    spiders_chopper_phase,
     spiders_prescription_claims,
     spiders_configuration_claims
 
@@ -400,5 +411,6 @@ include("external_rtc.jl")
 include("proper_algorithm.jl")
 include("spiders_provisional.jl")
 include("spiders_prescriptions.jl")
+include("spiders_chopper.jl")
 
 end
