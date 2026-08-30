@@ -25,8 +25,8 @@ This project validates the HIL seam between `AdaptiveOpticsSim.jl` and
    Proper propagation node with exact CPU, AMDGPU, and CUDA target admission,
    including declaration through the versioned TOML graph loader.
 8. Declarative, independently driven SPIDERS external-RTC LLOWFS and SCC
-   topologies with rectangular observations and application-captured trusted
-   prescription configurations.
+   topologies with rectangular observations and application-captured qualified
+   or explicitly provisional prescription configurations.
 
 ## Handoff Contract
 
@@ -97,20 +97,28 @@ explicit device-to-host copy after the graph boundary.
 
 ## Current Results
 
-The AOS-native Proper graph node passed its focused matrix on 2026-08-29:
+The AOS-native Proper graph node and provisional SPIDERS prescriptions passed
+their focused matrix on 2026-08-29:
 
-- CPU: 34/34 checks on Julia 1.12.7, including equivalent direct-Julia and
-  TOML-defined topology, rectangular output, the independently driven SPIDERS
-  LLOWFS and SCC topologies, inference, and zero warmed graph-step allocation.
-- AMDGPU: 18/18 checks on an AMD Radeon Graphics `gfx1030` device with
-  AMDGPU.jl 2.8 and scalar indexing disabled, including rectangular output.
-- CUDA: 18/18 checks on an NVIDIA GeForce RTX 3050 Ti Laptop GPU with CUDA.jl
-  6.3.1 and scalar indexing disabled, including rectangular output.
+- CPU: 122/122 checks on Julia 1.12.7. These include equivalent direct-Julia
+  and TOML-defined topology, distinct pupil and propagation grids, rectangular
+  output, provisional-profile provenance, both executable SPIDERS paths,
+  response to a deterministic pupil tilt, inference, and zero warmed
+  graph-step allocation.
+- AMDGPU: 46/46 checks on an AMD Radeon Graphics `gfx1030` device with
+  AMDGPU.jl 2.8 and scalar indexing disabled. Both 512-grid SPIDERS paths keep
+  every prepared array on the selected device and agree with CPU to less than
+  `1.8e-6` maximum absolute intensity error.
+- CUDA: the earlier 18/18 generic-node checks passed on an NVIDIA GeForce RTX
+  3050 Ti Laptop GPU with CUDA.jl 6.3.1 and scalar indexing disabled. The
+  shared CUDA fixture now includes the provisional SPIDERS paths, but that
+  expanded fixture has not been rerun on CUDA hardware at this revision.
 
-These checks establish functional equivalence and exact residency for the
-minimal pupil-OPD/pupil-amplitude prescriptions and validate the declarative
-SPIDERS topology boundaries with test prescriptions. They are not throughput,
-latency, detector-response, or full SPIDERS prescription evidence.
+These checks establish functional execution, allocation behavior, and exact
+residency for the tested configurations. They validate the declarative
+SPIDERS topology boundary and the explicitly provisional optical surrogate.
+They are not throughput, latency, detector-response, calibration-match, or
+as-built SPIDERS prescription evidence.
 
 The original combined AO/Proper seam results remain under `results/`:
 

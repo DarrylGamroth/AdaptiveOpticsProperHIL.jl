@@ -149,8 +149,8 @@ LLOWFS pupil OPD + amplitude -> trusted Proper prescription -> LLOWFS observatio
 SCC pupil OPD + amplitude    -> trusted Proper prescription -> SCC observation
 ```
 
-The application captures each qualified prescription and its complete physical
-configuration before loading the file:
+The application captures each qualified or explicitly provisional prescription
+and its complete physical configuration before loading the file:
 
 ```julia
 node_types = merge(
@@ -187,10 +187,10 @@ complete-frame model-time boundary; combining them in one simple graph would
 incorrectly execute both prescriptions on every step.
 
 The currently admitted legacy RTC products establish a 34-by-47 LLOWFS
-observation and a 416-by-380 SCC observation. They do not establish the missing
+observation and a 416-by-380 SCC observation. They do not establish a qualified
 SPIDERS Proper prescription, propagation scale, flux normalization, or detector
 response. Those values stay in the trusted Julia configurations instead of
-appearing as guesses in TOML.
+appearing as anonymous guesses in TOML.
 
 For model development before the as-built optical prescription is available,
 `provisional_spiders_h_regular_profile()` records a reviewable regular-H
@@ -202,9 +202,11 @@ configuration:
 ```julia
 profile = provisional_spiders_h_regular_profile(Float32)
 
-for claim in spiders_profile_claims(profile)
-    @info claim.name claim.evidence claim.current_choice \
-        claim.qualification_question
+llowfs_configuration = provisional_spiders_llowfs_configuration(profile)
+scc_configuration = provisional_spiders_scc_configuration(profile)
+
+for claim in spiders_configuration_claims(scc_configuration)
+    @info "SPIDERS assumption" name=claim.name evidence=claim.evidence current_choice=claim.current_choice question=claim.qualification_question
 end
 ```
 
@@ -240,6 +242,50 @@ DOI `10.1117/12.2629644`). The local calibration arrays establish product
 shapes and provide future validation targets; a reference image or interaction
 matrix is not an optical transmission map and is not silently substituted for
 one.
+
+The two configuration builders provide executable first-order Proper
+prescriptions for the existing TOML graphs. By default they embed a 128-by-128
+AOS pupil in a 512-by-512 propagation grid, leaving enough padded field for the
+off-axis SCC reference hole. They then apply:
+
+- a binary annular surrogate for the documented apodizer geometry;
+- a unit-amplitude charge-4 vortex with explicit placeholder tilt/Gaussian
+  central phase parameters inside the documented 5.7-lambda/D regular-H mask;
+- the documented FPM-to-L2 distance and L2 focal length;
+- a binary Lyot main aperture, enlarged orthogonal spider surrogate, and the
+  selected off-axis reference hole;
+- the complementary rejected-light path for LLOWFS or transmitted main-plus-
+  reference path for SCC; and
+- prepared camera rotation/resampling into the legacy product shape.
+
+The pupil embedding, propagation, mask maps, and detector resampling use
+preallocated target-native buffers. A warmed CPU graph step allocates no Julia
+heap memory. The same prescription uses Proper's CPU/GPU-native operations.
+The local AMDGPU result agrees with the CPU result to less than `1.8e-6`
+maximum absolute intensity error for both paths with scalar indexing disabled;
+CUDA execution of these provisional prescriptions remains to be revalidated.
+
+This is a topology-preserving simulation surrogate, not an as-built optical
+model. It is monochromatic and emits relative intensity. It does not yet model
+throughput, exposure, detector gain/noise/nonlinearity, bad pixels, saturation,
+distortion, measured aberrations, exact fold signs, or calibrated pixel
+registration. `spiders_configuration_claims(configuration)` combines all eight
+instrument-profile questions with four prescription-specific numerical
+assumptions so none of these defaults can disappear into implementation code.
+
+Register the two prepared configurations with the existing graph files:
+
+```julia
+node_types = merge(
+    builtin_graph_node_types(),
+    (
+        spiders_llowfs_proper=
+            proper_propagation_node_factory(llowfs_configuration),
+        spiders_scc_proper=
+            proper_propagation_node_factory(scc_configuration),
+    ),
+)
+```
 
 The primary closed-loop HIL path is therefore:
 

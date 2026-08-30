@@ -111,5 +111,74 @@ function run_proper_graph_gpu_tests(BackendArray, synchronize_gpu)
         host_input_definition;
         target=accelerator_target,
     )
+
+    spiders_profile = provisional_spiders_h_regular_profile(Float32)
+    spiders_configurations = (
+        provisional_spiders_llowfs_configuration(spiders_profile),
+        provisional_spiders_scc_configuration(spiders_profile),
+    )
+    for spiders_configuration in spiders_configurations
+        pupil_n = spiders_configuration.pupil_resolution
+        spiders_opd_host = zeros(Float32, pupil_n, pupil_n)
+        center = Float32(pupil_n + 1) / 2f0
+        @inbounds for column in axes(spiders_opd_host, 2)
+            value = 2f-7 * (Float32(column) - center) / Float32(pupil_n)
+            for row in axes(spiders_opd_host, 1)
+                spiders_opd_host[row, column] = value
+            end
+        end
+        spiders_amplitude_host = ones(Float32, pupil_n, pupil_n)
+        spiders_host_graph = prepare_algorithm_graph(
+            proper_test_graph(
+                spiders_configuration,
+                spiders_opd_host,
+                spiders_amplitude_host,
+            );
+            target=host_target,
+        )
+        step_graph!(spiders_host_graph)
+        spiders_reference = copy(graph_output(
+            spiders_host_graph,
+            :intensity,
+        ))
+
+        spiders_opd = BackendArray(spiders_opd_host)
+        spiders_amplitude = BackendArray(spiders_amplitude_host)
+        spiders_graph = prepare_algorithm_graph(
+            proper_test_graph(
+                spiders_configuration,
+                spiders_opd,
+                spiders_amplitude,
+            );
+            target=accelerator_target,
+        )
+        @test step_graph!(spiders_graph) === spiders_graph
+        spiders_output = graph_output(spiders_graph, :intensity)
+        synchronize_gpu()
+        @test spiders_output isa BackendArray
+        @test AdaptiveOpticsSim.Backends.compute_device(spiders_output) ==
+            accelerator_target
+        @test size(spiders_output) == size(spiders_reference)
+        @test all(isfinite, Array(spiders_output))
+        @test Array(spiders_output) ≈ spiders_reference rtol=1f-3 atol=3f-6
+
+        spiders_owner = AlgorithmGraphs.prepared_graph_node(
+            spiders_graph,
+            :proper,
+        )
+        for values in (
+            spiders_owner.workspace.assets.apodizer_mask,
+            spiders_owner.workspace.assets.focal_plane_mask_internal,
+            spiders_owner.workspace.assets.lyot_mask,
+            spiders_owner.workspace.assets.padded_pupil_opd,
+            spiders_owner.workspace.assets.padded_pupil_amplitude,
+            spiders_owner.workspace.assets.square_intensity,
+            spiders_owner.workspace.assets.rotated_intensity,
+            spiders_owner.workspace.assets.centered_field,
+        )
+            @test AdaptiveOpticsSim.Backends.compute_device(values) ==
+                accelerator_target
+        end
+    end
     return nothing
 end

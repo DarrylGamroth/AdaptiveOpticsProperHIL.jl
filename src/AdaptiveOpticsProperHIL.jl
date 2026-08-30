@@ -65,7 +65,16 @@ export SpidersEvidenceLevel,
     ProvisionalSpidersProfile,
     provisional_spiders_h_regular_profile,
     spiders_profile_claims,
-    spiders_profile_is_provisional
+    spiders_profile_is_provisional,
+    SpidersSurrogateParameters,
+    ProvisionalSpidersLLOWFSPrescription,
+    ProvisionalSpidersSCCPrescription,
+    PROVISIONAL_SPIDERS_LLOWFS_SCHEMA,
+    PROVISIONAL_SPIDERS_SCC_SCHEMA,
+    provisional_spiders_llowfs_configuration,
+    provisional_spiders_scc_configuration,
+    spiders_prescription_claims,
+    spiders_configuration_claims
 
 struct HILPayload{O,P,T}
     opd_m::O
@@ -388,5 +397,6 @@ include("latency_histograms.jl")
 include("external_rtc.jl")
 include("proper_algorithm.jl")
 include("spiders_provisional.jl")
+include("spiders_prescriptions.jl")
 
 end
