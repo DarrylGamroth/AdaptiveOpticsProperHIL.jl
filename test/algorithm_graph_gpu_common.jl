@@ -58,6 +58,42 @@ function run_proper_graph_gpu_tests(BackendArray, synchronize_gpu)
         accelerator_target
     @test Array(accelerator_output) ≈ host_reference rtol=3.0f-4 atol=3.0f-6
 
+    rectangular_configuration = ProperPropagationConfiguration(
+        rectangular_pupil_intensity_prescription;
+        resolution=n,
+        output_rows=n - 2,
+        output_columns=n - 3,
+        diameter_m=8.0f0,
+        wavelength_um=1.65f0,
+    )
+    host_rectangular_graph = prepare_algorithm_graph(
+        proper_test_graph(
+            rectangular_configuration,
+            pupil_opd_host,
+            pupil_amplitude_host,
+        );
+        target=host_target,
+    )
+    step_graph!(host_rectangular_graph)
+    rectangular_reference =
+        copy(graph_output(host_rectangular_graph, :intensity))
+    rectangular_graph = prepare_algorithm_graph(
+        proper_test_graph(
+            rectangular_configuration,
+            pupil_opd,
+            pupil_amplitude,
+        );
+        target=accelerator_target,
+    )
+    @test step_graph!(rectangular_graph) === rectangular_graph
+    rectangular_output = graph_output(rectangular_graph, :intensity)
+    synchronize_gpu()
+    @test size(rectangular_output) == (n - 2, n - 3)
+    @test rectangular_output isa BackendArray
+    @test AdaptiveOpticsSim.Backends.compute_device(rectangular_output) ==
+        accelerator_target
+    @test Array(rectangular_output) ≈ rectangular_reference rtol=3.0f-4 atol=3.0f-6
+
     host_publication = Matrix{Float32}(undef, n, n)
     copyto!(host_publication, accelerator_output)
     synchronize_gpu()

@@ -72,6 +72,8 @@ configuration and node directly:
 configuration = ProperPropagationConfiguration(
     science_prescription;
     resolution=128,
+    output_rows=128,
+    output_columns=128,
     diameter_m=8.0f0,
     wavelength_um=1.65f0,
 )
@@ -81,8 +83,12 @@ node = proper_propagation_node(:science_camera, configuration)
 The adapter prepares the prescription once and supplies `pupil_opd`,
 `pupil_amplitude`, `diameter_m`, `field`, `wavefront`, `output`, and
 `run_context` keyword bindings. `prepare_proper_assets` may be specialized for
-a prescription that needs prepared masks, plans, or scratch. Those assets stay
-in the workspace owner rather than the immutable propagation plan.
+a prescription that needs prepared masks, plans, or scratch; it receives both
+the square propagation resolution and the declared rectangular output shape.
+Those assets stay in the workspace owner rather than the immutable propagation
+plan. `output_rows` and `output_columns` default to `resolution`. When they
+differ, the prescription owns the prepared crop, resampling, detector mapping,
+and scientific units of the resulting observation.
 
 The graph's `prepare_algorithm_graph(...; target=...)` call selects the exact
 CPU, AMDGPU, or CUDA device. The scientific configuration therefore remains
@@ -127,6 +133,73 @@ For a real instrument loop, pass total residual OPD when the AO package owns
 atmosphere, telescope, and DM composition. Pass a DM-only sampled surface only
 when the Proper prescription intentionally owns the remaining optical error
 budget and applies the DM surface itself.
+
+## SPIDERS HIL Topology
+
+[`spiders_llowfs_hil.toml`](examples/graphs/spiders_llowfs_hil.toml) and
+[`spiders_scc_hil.toml`](examples/graphs/spiders_scc_hil.toml) record the two
+external-RTC sensor topologies without embedding an RTC implementation:
+
+```text
+LLOWFS pupil OPD + amplitude -> trusted Proper prescription -> LLOWFS observation
+SCC pupil OPD + amplitude    -> trusted Proper prescription -> SCC observation
+```
+
+The application captures each qualified prescription and its complete physical
+configuration before loading the file:
+
+```julia
+node_types = merge(
+    builtin_graph_node_types(),
+    (
+        spiders_llowfs_proper=
+            proper_propagation_node_factory(llowfs_configuration),
+        spiders_scc_proper=
+            proper_propagation_node_factory(scc_configuration),
+    ),
+)
+
+llowfs_definition = load_algorithm_graph(
+    "examples/graphs/spiders_llowfs_hil.toml";
+    node_types,
+    bindings=(
+        pupil_opd=llowfs_pupil_opd,
+        pupil_amplitude=llowfs_pupil_amplitude,
+    ),
+)
+scc_definition = load_algorithm_graph(
+    "examples/graphs/spiders_scc_hil.toml";
+    node_types,
+    bindings=(
+        pupil_opd=scc_pupil_opd,
+        pupil_amplitude=scc_pupil_amplitude,
+    ),
+)
+```
+
+The graphs are intentionally separate because LLOWFS and SCC have different
+acquisition rates. The application drives each prepared graph at its own
+complete-frame model-time boundary; combining them in one simple graph would
+incorrectly execute both prescriptions on every step.
+
+The currently admitted legacy RTC products establish a 34-by-47 LLOWFS
+observation and a 416-by-380 SCC observation. They do not establish the missing
+SPIDERS Proper prescription, propagation scale, flux normalization, or detector
+response. Those values stay in the trusted Julia configurations instead of
+appearing as guesses in TOML.
+
+The primary closed-loop HIL path is therefore:
+
+```text
+AOS -> complete LLOWFS/SCC observations -> PipeWireAO RTC
+    <- complete 468-coordinate PDM command <-
+```
+
+The surrounding AOS simulation applies that returned command through the
+measured DM model and renders the next path OPDs. The SPIDERS file contains no
+pixel estimator, reconstructor, temporal controller, command mixer, or DM
+policy. An in-process reference RTC may be composed separately for regression
+testing, but it is not part of this HIL topology.
 
 ## GPU Validation
 

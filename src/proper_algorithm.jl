@@ -13,9 +13,13 @@ Typed construction configuration for one AOS-native Proper propagation node.
 The prescription receives `(wavelength_m, resolution)` and the prepared
 keywords `pupil_opd`, `pupil_amplitude`, `diameter_m`, `field`, `wavefront`,
 `output`, and `run_context`. It must write `output` and return the usual Proper
-`(output, sampling_m)` result. The containing algorithm graph selects the exact
-CPU or GPU target; every ndarray used by this node has one element type and
-that same target.
+`(output, sampling_m)` result. `resolution` fixes the square pupil and Proper
+wavefront grid. `output_rows` and `output_columns` independently declare the
+caller-visible result; they default to `resolution`. A prescription that uses
+a different camera shape must perform its prepared crop, resampling, or
+detector mapping into `output` itself. The containing algorithm graph selects
+the exact CPU or GPU target; every ndarray used by this node has one element
+type and that same target.
 """
 struct ProperPropagationConfiguration{
     T<:Union{Float32,Float64},
@@ -23,6 +27,8 @@ struct ProperPropagationConfiguration{
 }
     prescription::Prescription
     resolution::Int
+    output_rows::Int
+    output_columns::Int
     diameter_m::T
     wavelength_um::T
     rng_seed::UInt64
@@ -34,6 +40,8 @@ end
 function ProperPropagationConfiguration(
     prescription::Function;
     resolution::Integer,
+    output_rows::Union{Nothing,Integer}=nothing,
+    output_columns::Union{Nothing,Integer}=nothing,
     diameter_m::Real,
     wavelength_um::Real,
     rng_seed::Integer=0,
@@ -43,6 +51,10 @@ function ProperPropagationConfiguration(
 )
     n = Int(resolution)
     n > 0 || throw(ArgumentError("resolution must be positive"))
+    rows = isnothing(output_rows) ? n : Int(output_rows)
+    columns = isnothing(output_columns) ? n : Int(output_columns)
+    rows > 0 || throw(ArgumentError("output_rows must be positive"))
+    columns > 0 || throw(ArgumentError("output_columns must be positive"))
     diameter, wavelength = promote(float(diameter_m), float(wavelength_um))
     T = typeof(diameter)
     T in (Float32, Float64) || throw(ArgumentError(
@@ -71,6 +83,8 @@ function ProperPropagationConfiguration(
     }(
         prescription,
         n,
+        rows,
+        columns,
         diameter,
         wavelength,
         UInt64(rng_seed),
@@ -85,14 +99,21 @@ function ProperPropagationConfiguration(prescription; kwargs...)
 end
 
 """
-    prepare_proper_assets(prescription, target, T, resolution)
+    prepare_proper_assets(prescription, target, T, resolution, output_shape)
 
 Prepare a named tuple of prescription-specific keyword assets. The default is
 empty. A prescription may specialize this method to allocate masks, plans, or
-replaceable scratch on `target`; the returned assets belong to the prepared
-workspace, not the immutable propagation plan.
+replaceable scratch on `target`; `output_shape` is the declared
+`(output_rows, output_columns)` tuple. The returned assets belong to the
+prepared workspace, not the immutable propagation plan.
 """
-prepare_proper_assets(prescription, target, ::Type, resolution::Int) = (;)
+prepare_proper_assets(
+    prescription,
+    target,
+    ::Type,
+    resolution::Int,
+    output_shape::Tuple{Int,Int},
+) = (;)
 
 """Reset prescription-specific prepared assets at a serialized graph boundary."""
 reset_proper_assets!(prescription, assets::NamedTuple) = assets
@@ -110,6 +131,8 @@ struct _ProperPropagationPlan{
     prescription::Prescription
     target::Target
     resolution::Int
+    output_rows::Int
+    output_columns::Int
     diameter_m::T
     wavelength_um::T
     rng_seed::UInt64
@@ -165,6 +188,8 @@ function _proper_plan(
         configuration.prescription,
         target,
         configuration.resolution,
+        configuration.output_rows,
+        configuration.output_columns,
         configuration.diameter_m,
         configuration.wavelength_um,
         configuration.rng_seed,
@@ -185,12 +210,12 @@ function _validate_proper_buffer(
     plan::_ProperPropagationPlan{T},
     values,
     role::AbstractString,
+    expected::Tuple{Int,Int},
 ) where {T}
     eltype(values) === T || throw(ArgumentError(
         "$role element type $(eltype(values)) does not match $T",
     ))
     ndims(values) == 2 || throw(DimensionMismatch("$role must be a matrix"))
-    expected = (plan.resolution, plan.resolution)
     size(values) == expected || throw(DimensionMismatch(
         "$role shape $(size(values)) does not match $expected",
     ))
@@ -270,9 +295,16 @@ function _prepare_proper_workspace(
     pupil_amplitude,
     output,
 ) where {T}
-    _validate_proper_buffer(plan, pupil_opd, "pupil OPD")
-    _validate_proper_buffer(plan, pupil_amplitude, "pupil amplitude")
-    _validate_proper_buffer(plan, output, "Proper output")
+    pupil_shape = (plan.resolution, plan.resolution)
+    output_shape = (plan.output_rows, plan.output_columns)
+    _validate_proper_buffer(plan, pupil_opd, "pupil OPD", pupil_shape)
+    _validate_proper_buffer(
+        plan,
+        pupil_amplitude,
+        "pupil amplitude",
+        pupil_shape,
+    )
+    _validate_proper_buffer(plan, output, "Proper output", output_shape)
 
     field = _allocate_proper_buffer(plan, Complex{T})
     run_context = Proper.RunContext(typeof(field); rng=state.rng)
@@ -289,6 +321,7 @@ function _prepare_proper_workspace(
             plan.target,
             T,
             plan.resolution,
+            output_shape,
         ),
         plan.target,
     )
@@ -338,14 +371,18 @@ function _AOG.graph_node_ports(
     ::Type{_ProperPropagationNode{T,Prescription}},
     configuration::ProperPropagationConfiguration{T,Prescription},
 ) where {T,Prescription}
-    shape = (configuration.resolution, configuration.resolution)
+    pupil_shape = (configuration.resolution, configuration.resolution)
+    output_shape = (
+        configuration.output_rows,
+        configuration.output_columns,
+    )
     return (
         _AOG.graph_port_contract(
             :pupil_opd,
             :input,
             :data,
             T,
-            shape,
+            pupil_shape,
             configuration.pupil_opd_schema,
             :column_major,
         ),
@@ -354,7 +391,7 @@ function _AOG.graph_node_ports(
             :input,
             :data,
             T,
-            shape,
+            pupil_shape,
             configuration.pupil_amplitude_schema,
             :column_major,
         ),
@@ -363,7 +400,7 @@ function _AOG.graph_node_ports(
             :output,
             :data,
             T,
-            shape,
+            output_shape,
             configuration.output_schema,
             :column_major,
         ),
@@ -431,6 +468,37 @@ function proper_propagation_node_factory(
     return ProperPropagationNodeFactory{T,typeof(prescription)}(prescription)
 end
 
+struct ConfiguredProperPropagationNodeFactory{
+    Configuration<:ProperPropagationConfiguration,
+}
+    configuration::Configuration
+end
+
+"""
+    proper_propagation_node_factory(configuration)
+
+Return a cold TOML node factory with a complete trusted Proper configuration
+captured by the Julia application. Nodes using this factory must contain an
+empty `config` table and no props. This form is intended for instrument graphs
+whose physical prescription and configuration come from an application-owned
+profile rather than from scalar literals in the topology file.
+"""
+function proper_propagation_node_factory(
+    configuration::ProperPropagationConfiguration,
+)
+    return ConfiguredProperPropagationNodeFactory(configuration)
+end
+
+function (factory::ConfiguredProperPropagationNodeFactory)(
+    name::Symbol,
+    config::NamedTuple,
+    props::NamedTuple,
+)
+    _require_proper_file_fields(config, (), (), "node '$name' config")
+    _require_proper_file_fields(props, (), (), "node '$name' props")
+    return proper_propagation_node(name, factory.configuration)
+end
+
 function _require_proper_file_fields(
     values::NamedTuple,
     allowed::Tuple,
@@ -481,6 +549,8 @@ function (factory::ProperPropagationNodeFactory{T})(
 ) where {T}
     allowed = (
         :diameter_m,
+        :output_columns,
+        :output_rows,
         :output_schema,
         :pupil_amplitude_schema,
         :pupil_opd_schema,
@@ -498,6 +568,16 @@ function (factory::ProperPropagationNodeFactory{T})(
                 config.resolution,
                 "node '$name' config.resolution",
             ),
+            output_rows=hasproperty(config, :output_rows) ?
+                _proper_file_integer(
+                    config.output_rows,
+                    "node '$name' config.output_rows",
+                ) : nothing,
+            output_columns=hasproperty(config, :output_columns) ?
+                _proper_file_integer(
+                    config.output_columns,
+                    "node '$name' config.output_columns",
+                ) : nothing,
             diameter_m=T(_proper_file_real(
                 config.diameter_m,
                 "node '$name' config.diameter_m",

@@ -24,6 +24,9 @@ This project validates the HIL seam between `AdaptiveOpticsSim.jl` and
 7. `AdaptiveOpticsSim.AlgorithmGraphs` execution of the optional AOS-native
    Proper propagation node with exact CPU, AMDGPU, and CUDA target admission,
    including declaration through the versioned TOML graph loader.
+8. Declarative, independently driven SPIDERS external-RTC LLOWFS and SCC
+   topologies with rectangular observations and application-captured trusted
+   prescription configurations.
 
 ## Handoff Contract
 
@@ -39,10 +42,11 @@ The default cross-package contract is:
 - The repeated frame loop uses `Proper.prepare_run` plus `Proper.prop_run` so
   static model assets, slot lookup, and keyword merging
   are resolved before entering the loop.
-- The Proper graph node binds the exact graph OPD, pupil-amplitude, and
-  output arrays after topology admission. Proper-specific scratch is prepared
-  separately through `prepare_proper_assets`; it is not retained in the
-  immutable propagation plan.
+- The Proper graph node binds the exact graph OPD, pupil-amplitude, and output
+  arrays after topology admission. The pupil and wavefront grid is square; the
+  declared output may be rectangular. Proper-specific scratch is prepared
+  separately through `prepare_proper_assets`, which receives both shapes; it
+  is not retained in the immutable propagation plan.
 - One prepared Proper node is homogeneous in numeric type, backend, and exact
   device. Mixed-type graph nodes remain valid elsewhere, but any GPU-to-host
   publication is an explicit boundary operation.
@@ -91,16 +95,18 @@ explicit device-to-host copy after the graph boundary.
 
 The AOS-native Proper graph node passed its focused matrix on 2026-08-29:
 
-- CPU: 19/19 checks on Julia 1.12.7, including equivalent direct-Julia and
-  TOML-defined topology.
-- AMDGPU: 13/13 checks on an AMD Radeon Graphics `gfx1030` device with
-  AMDGPU.jl 2.8 and scalar indexing disabled.
-- CUDA: 13/13 checks on an NVIDIA GeForce RTX 3050 Ti Laptop GPU with CUDA.jl
-  6.3.1 and scalar indexing disabled.
+- CPU: 34/34 checks on Julia 1.12.7, including equivalent direct-Julia and
+  TOML-defined topology, rectangular output, the independently driven SPIDERS
+  LLOWFS and SCC topologies, inference, and zero warmed graph-step allocation.
+- AMDGPU: 18/18 checks on an AMD Radeon Graphics `gfx1030` device with
+  AMDGPU.jl 2.8 and scalar indexing disabled, including rectangular output.
+- CUDA: 18/18 checks on an NVIDIA GeForce RTX 3050 Ti Laptop GPU with CUDA.jl
+  6.3.1 and scalar indexing disabled, including rectangular output.
 
 These checks establish functional equivalence and exact residency for the
-minimal pupil-OPD/pupil-amplitude prescription. They are not throughput,
-latency, or full SPIDERS prescription evidence.
+minimal pupil-OPD/pupil-amplitude prescriptions and validate the declarative
+SPIDERS topology boundaries with test prescriptions. They are not throughput,
+latency, detector-response, or full SPIDERS prescription evidence.
 
 The original combined AO/Proper seam results remain under `results/`:
 
