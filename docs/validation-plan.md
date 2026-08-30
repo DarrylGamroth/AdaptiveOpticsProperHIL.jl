@@ -45,8 +45,12 @@ The default cross-package contract is:
 - The Proper graph node binds the exact graph OPD, pupil-amplitude, and output
   arrays after topology admission. The pupil and wavefront grid is square; the
   declared output may be rectangular. Proper-specific scratch is prepared
-  separately through `prepare_proper_assets`, which receives both shapes; it
-  is not retained in the immutable propagation plan.
+  separately through `prepare_proper_assets`, which receives the propagation
+  and output shapes; it is not retained in the immutable propagation plan.
+- The square pupil inputs may use `pupil_resolution` distinct from the square
+  propagation `resolution`. The prescription owns the prepared, target-native
+  embedding or resampling; the graph adapter never assumes that padding is a
+  crop of the caller's pupil.
 - One prepared Proper node is homogeneous in numeric type, backend, and exact
   device. Mixed-type graph nodes remain valid elsewhere, but any GPU-to-host
   publication is an explicit boundary operation.

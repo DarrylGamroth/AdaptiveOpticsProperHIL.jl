@@ -13,13 +13,15 @@ Typed construction configuration for one AOS-native Proper propagation node.
 The prescription receives `(wavelength_m, resolution)` and the prepared
 keywords `pupil_opd`, `pupil_amplitude`, `diameter_m`, `field`, `wavefront`,
 `output`, and `run_context`. It must write `output` and return the usual Proper
-`(output, sampling_m)` result. `resolution` fixes the square pupil and Proper
-wavefront grid. `output_rows` and `output_columns` independently declare the
-caller-visible result; they default to `resolution`. A prescription that uses
-a different camera shape must perform its prepared crop, resampling, or
-detector mapping into `output` itself. The containing algorithm graph selects
-the exact CPU or GPU target; every ndarray used by this node has one element
-type and that same target.
+`(output, sampling_m)` result. `resolution` fixes the square Proper wavefront
+grid. `pupil_resolution` independently fixes both square pupil inputs and
+defaults to `resolution`; a padded prescription must explicitly embed or
+resample those inputs into its prepared propagation-grid scratch. `output_rows`
+and `output_columns` independently declare the caller-visible result and
+default to `resolution`. A prescription that uses a different camera shape
+must perform its prepared crop, resampling, or detector mapping into `output`
+itself. The containing algorithm graph selects the exact CPU or GPU target;
+every ndarray used by this node has one element type and that same target.
 """
 struct ProperPropagationConfiguration{
     T<:Union{Float32,Float64},
@@ -27,6 +29,7 @@ struct ProperPropagationConfiguration{
 }
     prescription::Prescription
     resolution::Int
+    pupil_resolution::Int
     output_rows::Int
     output_columns::Int
     diameter_m::T
@@ -40,6 +43,7 @@ end
 function ProperPropagationConfiguration(
     prescription::Function;
     resolution::Integer,
+    pupil_resolution::Union{Nothing,Integer}=nothing,
     output_rows::Union{Nothing,Integer}=nothing,
     output_columns::Union{Nothing,Integer}=nothing,
     diameter_m::Real,
@@ -51,6 +55,10 @@ function ProperPropagationConfiguration(
 )
     n = Int(resolution)
     n > 0 || throw(ArgumentError("resolution must be positive"))
+    pupil_n = isnothing(pupil_resolution) ? n : Int(pupil_resolution)
+    pupil_n > 0 || throw(ArgumentError(
+        "pupil_resolution must be positive",
+    ))
     rows = isnothing(output_rows) ? n : Int(output_rows)
     columns = isnothing(output_columns) ? n : Int(output_columns)
     rows > 0 || throw(ArgumentError("output_rows must be positive"))
@@ -83,6 +91,7 @@ function ProperPropagationConfiguration(
     }(
         prescription,
         n,
+        pupil_n,
         rows,
         columns,
         diameter,
@@ -131,6 +140,7 @@ struct _ProperPropagationPlan{
     prescription::Prescription
     target::Target
     resolution::Int
+    pupil_resolution::Int
     output_rows::Int
     output_columns::Int
     diameter_m::T
@@ -188,6 +198,7 @@ function _proper_plan(
         configuration.prescription,
         target,
         configuration.resolution,
+        configuration.pupil_resolution,
         configuration.output_rows,
         configuration.output_columns,
         configuration.diameter_m,
@@ -295,7 +306,7 @@ function _prepare_proper_workspace(
     pupil_amplitude,
     output,
 ) where {T}
-    pupil_shape = (plan.resolution, plan.resolution)
+    pupil_shape = (plan.pupil_resolution, plan.pupil_resolution)
     output_shape = (plan.output_rows, plan.output_columns)
     _validate_proper_buffer(plan, pupil_opd, "pupil OPD", pupil_shape)
     _validate_proper_buffer(
@@ -371,7 +382,10 @@ function _AOG.graph_node_ports(
     ::Type{_ProperPropagationNode{T,Prescription}},
     configuration::ProperPropagationConfiguration{T,Prescription},
 ) where {T,Prescription}
-    pupil_shape = (configuration.resolution, configuration.resolution)
+    pupil_shape = (
+        configuration.pupil_resolution,
+        configuration.pupil_resolution,
+    )
     output_shape = (
         configuration.output_rows,
         configuration.output_columns,
@@ -552,6 +566,7 @@ function (factory::ProperPropagationNodeFactory{T})(
         :output_columns,
         :output_rows,
         :output_schema,
+        :pupil_resolution,
         :pupil_amplitude_schema,
         :pupil_opd_schema,
         :resolution,
@@ -568,6 +583,11 @@ function (factory::ProperPropagationNodeFactory{T})(
                 config.resolution,
                 "node '$name' config.resolution",
             ),
+            pupil_resolution=hasproperty(config, :pupil_resolution) ?
+                _proper_file_integer(
+                    config.pupil_resolution,
+                    "node '$name' config.pupil_resolution",
+                ) : nothing,
             output_rows=hasproperty(config, :output_rows) ?
                 _proper_file_integer(
                     config.output_rows,

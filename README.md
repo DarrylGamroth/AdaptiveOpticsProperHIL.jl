@@ -72,6 +72,7 @@ configuration and node directly:
 configuration = ProperPropagationConfiguration(
     science_prescription;
     resolution=128,
+    pupil_resolution=128,
     output_rows=128,
     output_columns=128,
     diameter_m=8.0f0,
@@ -86,9 +87,12 @@ The adapter prepares the prescription once and supplies `pupil_opd`,
 a prescription that needs prepared masks, plans, or scratch; it receives both
 the square propagation resolution and the declared rectangular output shape.
 Those assets stay in the workspace owner rather than the immutable propagation
-plan. `output_rows` and `output_columns` default to `resolution`. When they
-differ, the prescription owns the prepared crop, resampling, detector mapping,
-and scientific units of the resulting observation.
+plan. `pupil_resolution` defaults to `resolution`; when it differs, the
+prescription owns a prepared embedding or resampling from the square pupil
+inputs into the square propagation grid. `output_rows` and `output_columns`
+also default to `resolution`. When they differ, the prescription owns the
+prepared crop, resampling, detector mapping, and scientific units of the
+resulting observation.
 
 The graph's `prepare_algorithm_graph(...; target=...)` call selects the exact
 CPU, AMDGPU, or CUDA device. The scientific configuration therefore remains

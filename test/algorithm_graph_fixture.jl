@@ -52,6 +52,65 @@ function rectangular_pupil_intensity_prescription(
     return output, sampling_m
 end
 
+function padded_pupil_intensity_prescription(
+    wavelength_m,
+    resolution;
+    pupil_opd,
+    pupil_amplitude,
+    diameter_m,
+    field,
+    wavefront,
+    output,
+    run_context,
+    padded_opd,
+    padded_amplitude,
+)
+    size(field) == (resolution, resolution) || error("field binding changed")
+    Proper.prop_magnify!(
+        padded_opd,
+        pupil_opd,
+        one(wavelength_m),
+        run_context,
+    )
+    Proper.prop_magnify!(
+        padded_amplitude,
+        pupil_amplitude,
+        one(wavelength_m),
+        run_context,
+    )
+    Proper.prop_begin!(
+        wavefront,
+        diameter_m,
+        wavelength_m;
+        beam_diam_fraction=size(pupil_opd, 1) / resolution,
+    )
+    Proper.prop_multiply(wavefront, padded_amplitude)
+    Proper.prop_add_phase(wavefront, padded_opd)
+    return Proper.prop_end(wavefront, output)
+end
+
+function AdaptiveOpticsProperHIL.prepare_proper_assets(
+    ::typeof(padded_pupil_intensity_prescription),
+    target,
+    ::Type{T},
+    resolution::Int,
+    output_shape::Tuple{Int,Int},
+) where {T}
+    output_shape == (resolution, resolution) || error(
+        "padded test output must match the propagation grid",
+    )
+    padded_opd = AdaptiveOpticsSim.Backends.allocate_device_array(
+        target,
+        T,
+        resolution,
+        resolution,
+    )
+    padded_amplitude = similar(padded_opd)
+    fill!(padded_opd, zero(T))
+    fill!(padded_amplitude, zero(T))
+    return (; padded_opd, padded_amplitude)
+end
+
 function AdaptiveOpticsProperHIL.prepare_proper_assets(
     ::typeof(rectangular_pupil_intensity_prescription),
     target,

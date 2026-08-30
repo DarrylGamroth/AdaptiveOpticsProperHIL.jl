@@ -92,6 +92,30 @@ include("algorithm_graph_fixture.jl")
     @test @allocated(step_graph!(rectangular_graph)) == 0
     @test @inferred(step_graph!(rectangular_graph)) === rectangular_graph
 
+    padded_configuration = ProperPropagationConfiguration(
+        padded_pupil_intensity_prescription;
+        resolution=8,
+        pupil_resolution=4,
+        diameter_m=8.0f0,
+        wavelength_um=1.65f0,
+    )
+    padded_opd = reshape(Float32.(0:15), 4, 4) .* 1.0f-9
+    padded_amplitude = ones(Float32, 4, 4)
+    padded_graph = prepare_algorithm_graph(
+        proper_test_graph(
+            padded_configuration,
+            padded_opd,
+            padded_amplitude,
+        );
+        target=target,
+    )
+    @test padded_configuration.pupil_resolution == 4
+    @test step_graph!(padded_graph) === padded_graph
+    @test size(graph_output(padded_graph, :intensity)) == (8, 8)
+    @test all(isfinite, graph_output(padded_graph, :intensity))
+    @test @allocated(step_graph!(padded_graph)) == 0
+    @test @inferred(step_graph!(padded_graph)) === padded_graph
+
     llowfs_configuration = ProperPropagationConfiguration(
         rectangular_pupil_intensity_prescription;
         resolution=8,
@@ -179,6 +203,13 @@ include("algorithm_graph_fixture.jl")
     @test_throws ArgumentError ProperPropagationConfiguration(
         pupil_intensity_prescription;
         resolution=0,
+        diameter_m=8.0f0,
+        wavelength_um=1.65f0,
+    )
+    @test_throws ArgumentError ProperPropagationConfiguration(
+        pupil_intensity_prescription;
+        resolution=8,
+        pupil_resolution=0,
         diameter_m=8.0f0,
         wavelength_um=1.65f0,
     )
