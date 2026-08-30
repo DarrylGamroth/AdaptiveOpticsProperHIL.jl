@@ -188,6 +188,55 @@ SPIDERS Proper prescription, propagation scale, flux normalization, or detector
 response. Those values stay in the trusted Julia configurations instead of
 appearing as guesses in TOML.
 
+For model development before the as-built optical prescription is available,
+`provisional_spiders_h_regular_profile()` records a reviewable regular-H
+starting point. It includes the deployed SpiderMan FPM-stage and Galil presets,
+the science-wheel serial numbers and slot tables, and the dimensions reported
+by the SPIDERS optical design. It is explicitly not a qualified instrument
+configuration:
+
+```julia
+profile = provisional_spiders_h_regular_profile(Float32)
+
+for claim in spiders_profile_claims(profile)
+    @info claim.name claim.evidence claim.current_choice \
+        claim.qualification_question
+end
+```
+
+The current wiring assumption assigns wheel 2 to LLOWFS and wheel 3 to SCC.
+SpiderMan contains no checked-in optical-arm label for either serial. The two
+wheels have identical slot tables, so reversing that ownership does not change
+the provisional monochromatic regular-H model; it changes only the hardware
+identity. The normal filter is provisionally slot 5 (`1550-25nm`), inferred
+from those tables and the local `LOWFS/filt5` calibration family. Reverse
+the assumed wiring without changing package code:
+
+```julia
+profile = provisional_spiders_h_regular_profile(
+    Float32;
+    llowfs_wheel=3,
+    scc_wheel=2,
+)
+```
+
+`spiders_profile_claims(profile)` is the qualification checklist. In addition
+to wheel ownership and the normal filter slot, it asks for the LLOWFS selector
+state, SCC acquisition state, installed reference pinhole and position angle,
+as-built tilt-Gaussian-vortex and apodizer maps, and qualified detector
+mapping. The defaults use a 203 micrometre reference hole, the focal-plane and
+zoomed-in LLOWFS selectors, an unblocked/fringed SCC path, and a zero-degree
+reference-hole position angle. These are named placeholders, not observations
+of current hardware state.
+
+The profile's paper-backed values come from the regular-H optical design in
+*Optical design of SPIDERS, the Subaru Pathfinder Instrument for Detecting
+Exoplanets and Retrieving Spectra* (Proc. SPIE 12185,
+DOI `10.1117/12.2629644`). The local calibration arrays establish product
+shapes and provide future validation targets; a reference image or interaction
+matrix is not an optical transmission map and is not silently substituted for
+one.
+
 The primary closed-loop HIL path is therefore:
 
 ```text

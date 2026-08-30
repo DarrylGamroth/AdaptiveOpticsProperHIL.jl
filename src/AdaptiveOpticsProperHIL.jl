@@ -52,6 +52,21 @@ export ProperPropagationConfiguration,
     prepare_proper_assets,
     reset_proper_assets!
 
+export SpidersEvidenceLevel,
+    SpidersDocumented,
+    SpidersDeploymentConfigured,
+    SpidersInferred,
+    SpidersPlaceholder,
+    SpidersProfileClaim,
+    SpidersFocalPlaneMask,
+    SpidersGalilAlignment,
+    SpidersFilterSelection,
+    SpidersOpticalGeometry,
+    ProvisionalSpidersProfile,
+    provisional_spiders_h_regular_profile,
+    spiders_profile_claims,
+    spiders_profile_is_provisional
+
 struct HILPayload{O,P,T}
     opd_m::O
     pupil::P
@@ -372,5 +387,6 @@ include("benchmark_matrix.jl")
 include("latency_histograms.jl")
 include("external_rtc.jl")
 include("proper_algorithm.jl")
+include("spiders_provisional.jl")
 
 end
