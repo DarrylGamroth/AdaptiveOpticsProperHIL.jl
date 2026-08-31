@@ -12,14 +12,14 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 AdaptiveOpticsProperHIL = {path = "../.."}
 AdaptiveOpticsSim = {path = "../../../AdaptiveOpticsSim.jl"}
 HdrHistogram = {url = "https://github.com/DarrylGamroth/HdrHistogram.jl.git", rev = "cd42987e0739c06d29d20b4341f088b85e7a620c"}
-Proper = {url = "https://github.com/DarrylGamroth/Proper.jl.git", rev = "97f9eca538a361f5d700d095f6def7d21cd95eb3"}
+Proper = {url = "https://github.com/DarrylGamroth/Proper.jl.git", rev = "984c89d452fd6db16904523dfdd20871ad9f5c54"}
 
 [compat]
 AdaptiveOpticsProperHIL = "0.1"
 AdaptiveOpticsSim = "0.1"
 BenchmarkTools = "1.6"
-CUDA = "5"
+CUDA = "6"
 HdrHistogram = "0.4"
 JSON3 = "1"
-Proper = "0.1"
+Proper = "0.2"
 julia = "1.12"

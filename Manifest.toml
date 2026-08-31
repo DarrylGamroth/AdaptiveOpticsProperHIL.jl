@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "3fee40ab806d254caca876d48b360a3f44845e96"
+project_hash = "99cf9a6fee11d760b16e78f922147fca9fc40337"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -500,11 +500,11 @@ version = "1.11.0"
 
 [[deps.Proper]]
 deps = ["AcceleratedKernels", "FFTW", "FITSIO", "KernelAbstractions", "LinearAlgebra", "Random", "Serialization", "Statistics"]
-git-tree-sha1 = "0b166c1f1bc9dcfcb2959f472a8aaac577e5e12b"
-repo-rev = "ec146b53ac39d56dc005795ae37176605c15cbe5"
+git-tree-sha1 = "53a1281896dfbd6948716c60891a57c77cc1c8f5"
+repo-rev = "984c89d452fd6db16904523dfdd20871ad9f5c54"
 repo-url = "https://github.com/DarrylGamroth/Proper.jl.git"
 uuid = "0686a737-3bdd-44da-9bf7-6692cf630078"
-version = "0.1.0"
+version = "0.2.0"
 
     [deps.Proper.extensions]
     ProperAMDGPUExt = "AMDGPU"

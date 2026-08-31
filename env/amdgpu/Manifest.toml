@@ -1,8 +1,8 @@
 # This file is machine-generated - editing it directly is not advised
 
-julia_version = "1.12.6"
+julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "0dca50f66d1b4c14f5f36c6a12fe89bec78119ce"
+project_hash = "db83d7ba5a4e1f41e0f891cd83dc4351c7584f7b"
 
 [[deps.AMDGPU]]
 deps = ["AbstractFFTs", "AcceleratedKernels", "Adapt", "Atomix", "BFloat16s", "CEnum", "ExprTools", "GPUArrays", "GPUCompiler", "GPUToolbox", "KernelAbstractions", "LLD_jll", "LLVM", "LLVM_jll", "Libdl", "LinearAlgebra", "Pkg", "PrecompileTools", "Preferences", "PrettyTables", "Printf", "ROCmDeviceLibs_jll", "Random", "Random123", "RandomNumbers", "SparseArrays", "StaticArraysCore", "Statistics", "UnsafeAtomics"]
@@ -66,7 +66,7 @@ uuid = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
 version = "0.1.0"
 
 [[deps.AdaptiveOpticsSim]]
-deps = ["AbstractFFTs", "FFTW", "ForwardDiff", "KernelAbstractions", "LinearAlgebra", "Logging", "Random", "Serialization", "SparseArrays", "SpecialFunctions", "Statistics", "TOML"]
+deps = ["AbstractFFTs", "FFTW", "FixedSizeArrays", "ForwardDiff", "KernelAbstractions", "LinearAlgebra", "Logging", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "TOML"]
 path = "../../../AdaptiveOpticsSim.jl"
 uuid = "002fb5eb-ad68-44a0-adbe-b299bfc2febc"
 version = "0.1.0"
@@ -74,21 +74,25 @@ version = "0.1.0"
     [deps.AdaptiveOpticsSim.extensions]
     AdaptiveOpticsSimAMDGPUExt = "AMDGPU"
     AdaptiveOpticsSimAcceleratedKernelsExt = "AcceleratedKernels"
+    AdaptiveOpticsSimAppleAccelerateExt = "AppleAccelerate"
     AdaptiveOpticsSimCSVExt = ["CSV", "Tables"]
     AdaptiveOpticsSimCUDAExt = "CUDA"
     AdaptiveOpticsSimDaggerExt = "Dagger"
     AdaptiveOpticsSimJSON3Ext = "JSON3"
     AdaptiveOpticsSimMetalExt = "Metal"
+    AdaptiveOpticsSimPipeWireAOExt = "PipeWireAO"
     AdaptiveOpticsSimTablesExt = "Tables"
 
     [deps.AdaptiveOpticsSim.weakdeps]
     AMDGPU = "21141c5a-9bdb-4563-92ae-f87d6854732e"
     AcceleratedKernels = "6a4ca0a5-0e36-4168-a932-d9be78d558f1"
+    AppleAccelerate = "13e28ba4-7ad8-5781-acae-3021b1ed3924"
     CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
     CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
     Dagger = "d58978e5-989f-55fb-8d15-ea34adc7bf54"
     JSON3 = "0f8b85d8-7281-11e9-16c2-39a750bddbf1"
     Metal = "dde4c033-4e86-420c-a63e-0dd931031962"
+    PipeWireAO = "5d815c25-fdf3-4508-8205-db8be38ea5d0"
     Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [[deps.ArgCheck]]
@@ -167,6 +171,11 @@ git-tree-sha1 = "962834c22b66e32aa10f7611c08c8ca4e20749a9"
 uuid = "944b1d66-785c-5afd-91f1-9de20f533193"
 version = "0.7.8"
 
+[[deps.Collects]]
+git-tree-sha1 = "d0b504dbd9ea6a0142845a6f9b4c58b3627c718f"
+uuid = "08986516-18db-4a8b-8eaa-f5ef1828d8f1"
+version = "1.1.0"
+
 [[deps.CommonSubexpressions]]
 deps = ["MacroTools"]
 git-tree-sha1 = "cda2cfaebb4be89c9084adaca7dd7333369715c5"
@@ -186,7 +195,7 @@ weakdeps = ["Dates", "LinearAlgebra"]
 [[deps.CompilerSupportLibraries_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "e66e0078-7015-5450-92f7-15fbd957f2ae"
-version = "1.3.0+1"
+version = "1.3.1+2"
 
 [[deps.Crayons]]
 git-tree-sha1 = "249fe38abf76d48563e2f4556bebd215aa317e15"
@@ -256,6 +265,17 @@ version = "0.17.5"
 [[deps.FileWatching]]
 uuid = "7b1f6079-737a-58dc-b8bc-7a2ca5c1b5ee"
 version = "1.11.0"
+
+[[deps.FixedSizeArrays]]
+deps = ["Collects"]
+git-tree-sha1 = "76bb6e6427ba47b22c97b7f2cddc1ae002e6a9ad"
+uuid = "3821ddf9-e5b5-40d5-8e25-6813ab96b5e2"
+version = "1.3.0"
+weakdeps = ["Adapt", "Random"]
+
+    [deps.FixedSizeArrays.extensions]
+    FixedSizeArraysAdaptExt = "Adapt"
+    FixedSizeArraysRandomExt = "Random"
 
 [[deps.ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "LinearAlgebra", "LogExpFunctions", "NaNMath", "Preferences", "Printf", "Random", "SpecialFunctions"]
@@ -537,7 +557,7 @@ version = "0.8.7+0"
 [[deps.OpenSSL_jll]]
 deps = ["Artifacts", "Libdl"]
 uuid = "458c3c95-2e84-50aa-8efc-19380b2a3a95"
-version = "3.5.4+0"
+version = "3.5.6+0"
 
 [[deps.OpenSpecFun_jll]]
 deps = ["Artifacts", "CompilerSupportLibraries_jll", "JLLWrappers", "Libdl"]
@@ -603,11 +623,11 @@ version = "1.11.0"
 
 [[deps.Proper]]
 deps = ["AcceleratedKernels", "FFTW", "FITSIO", "KernelAbstractions", "LinearAlgebra", "Random", "Serialization", "Statistics"]
-git-tree-sha1 = "0b166c1f1bc9dcfcb2959f472a8aaac577e5e12b"
-repo-rev = "97f9eca538a361f5d700d095f6def7d21cd95eb3"
+git-tree-sha1 = "53a1281896dfbd6948716c60891a57c77cc1c8f5"
+repo-rev = "984c89d452fd6db16904523dfdd20871ad9f5c54"
 repo-url = "https://github.com/DarrylGamroth/Proper.jl.git"
 uuid = "0686a737-3bdd-44da-9bf7-6692cf630078"
-version = "0.1.0"
+version = "0.2.0"
 
     [deps.Proper.extensions]
     ProperAMDGPUExt = "AMDGPU"
