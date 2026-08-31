@@ -54,6 +54,15 @@ export ProperPropagationConfiguration,
     prepare_proper_assets,
     reset_proper_assets!
 
+export PreparedOpticalIntensityModel,
+    PreparedDetectorHIL,
+    propagate_optics!,
+    optical_intensity,
+    optical_sampling_m,
+    prepare_detector_hil,
+    detector_hil_step!,
+    detector_hil_frame
+
 export SpidersEvidenceLevel,
     SpidersDocumented,
     SpidersDeploymentConfigured,
@@ -408,6 +417,7 @@ end
 include("benchmark_matrix.jl")
 include("latency_histograms.jl")
 include("external_rtc.jl")
+include("prepared_detector_hil.jl")
 include("proper_algorithm.jl")
 include("spiders_provisional.jl")
 include("spiders_prescriptions.jl")

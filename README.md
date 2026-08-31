@@ -140,6 +140,12 @@ budget and applies the DM surface itself.
 
 ## SPIDERS HIL Topology
 
+SPIDERS is one instrument scenario in this package, not the package boundary.
+The reusable boundary remains any prepared PROPER intensity model connected to
+AdaptiveOpticsSim or to an AOS algorithm graph. `SpidersProper.jl` owns the
+private SPIDERS optical prescription; this repository owns its cross-package
+validation, detector handoff, RTC topology, and benchmark evidence.
+
 [`spiders_llowfs_hil.toml`](examples/graphs/spiders_llowfs_hil.toml) and
 [`spiders_scc_hil.toml`](examples/graphs/spiders_scc_hil.toml) record the two
 external-RTC sensor topologies without embedding an RTC implementation:
@@ -191,6 +197,22 @@ observation and a 416-by-380 SCC observation. They do not establish a qualified
 SPIDERS Proper prescription, propagation scale, flux normalization, or detector
 response. Those values stay in the trusted Julia configurations instead of
 appearing as anonymous guesses in TOML.
+
+The Zemax-derived reflected-Lyot model can be validated with the optional
+private-package environment:
+
+```bash
+julia --project=env/spiders -e 'using Pkg; Pkg.instantiate()'
+julia --project=env/spiders scripts/validate_spiders_llowfs.jl 512 software
+```
+
+The direct handoff uses the deployed VENOMS array convention `(SizeX, SizeY)`:
+the GoldEye sensor is represented as `(320, 256)` with a `(34, 47)` output ROI,
+15 micrometre pixels, `psf_sampling=1`, and `binning=1`. A software ROI uses an
+AdaptiveOpticsSim `FrameWindow`; a hardware ROI uses a physically cropped
+detector input. Both paths perform a direct pixel copy from the PROPER grid and
+no image resampling. The default centered ROI origin is only a validation
+placeholder: use live VENOMS `OffsetX` and `OffsetY` for instrument matching.
 
 For model development before the as-built optical prescription is available,
 `provisional_spiders_h_regular_profile()` records a reviewable regular-H

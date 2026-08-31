@@ -5,6 +5,19 @@ using HdrHistogram
 using Sockets
 using Test
 
+mutable struct TestPreparedIntensity{A}
+    output::A
+end
+
+
+@inline function test_propagate!(prepared::TestPreparedIntensity)
+    @. prepared.output = prepared.output + 1
+    return prepared.output
+end
+
+
+@inline test_intensity(prepared::TestPreparedIntensity) = prepared.output
+
 @testset "AdaptiveOpticsProperHIL" begin
     @testset "OPD convention cases" begin
         results = validate_conventions(T=Float64, n=32, atol=1e-12)
@@ -22,6 +35,57 @@ using Test
             hil_step!(ctx)
         end
         @test (@allocated hil_step!(ctx)) == 0
+    end
+
+    @testset "Prepared native detector HIL seam" begin
+        optical_output = reshape(Float32.(1:80), 8, 10)
+        optical = TestPreparedIntensity(optical_output)
+        model = PreparedOpticalIntensityModel(
+            optical,
+            test_propagate!,
+            test_intensity,
+            15f-6,
+        )
+        detector = AdaptiveOpticsSim.Detectors.Detector(
+            exposure_duration=1f0,
+            noise=AdaptiveOpticsSim.Detectors.NoiseNone(),
+            sensor=AdaptiveOpticsSim.Detectors.InGaAsSensor(T=Float32),
+            psf_sampling=1,
+            binning=1,
+            readout_window=AdaptiveOpticsSim.Detectors.FrameWindow(2:4, 3:6),
+            output_type=Float32,
+            T=Float32,
+        )
+        prepared = prepare_detector_hil(
+            model,
+            detector;
+            frame_shape=(6, 8),
+            wavelength_m=1.55f-6,
+            normalized_to_photon_rate=1f0,
+            rng=AdaptiveOpticsSim.runtime_rng(7),
+        )
+        @test prepared.source_rows == 2:7
+        @test prepared.source_cols == 2:9
+        frame = detector_hil_step!(prepared)
+        @test frame === detector_hil_frame(prepared)
+        @test size(frame) == (3, 4)
+        @test frame == (optical_output[2:7, 2:9])[2:4, 3:6]
+        detector_hil_step!(prepared)
+        @test (@allocated detector_hil_step!(prepared)) == 0
+
+        binned_detector = AdaptiveOpticsSim.Detectors.Detector(
+            noise=AdaptiveOpticsSim.Detectors.NoiseNone(),
+            sensor=AdaptiveOpticsSim.Detectors.InGaAsSensor(T=Float32),
+            binning=2,
+            T=Float32,
+        )
+        @test_throws ArgumentError prepare_detector_hil(
+            model,
+            binned_detector;
+            frame_shape=(6, 8),
+            wavelength_m=1.55f-6,
+            normalized_to_photon_rate=1f0,
+        )
     end
 
     @testset "External RTC loopback contract" begin
