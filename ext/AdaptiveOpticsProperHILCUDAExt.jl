@@ -2,15 +2,15 @@ module AdaptiveOpticsProperHILCUDAExt
 
 using AdaptiveOpticsProperHIL
 using CUDA
+using Proper
 
-struct CUDAGraphPropagation{G,E,I}
-    graph::G
-    executable::E
+struct CUDAGraphPropagation{E,I}
+    execution::E
     intensity::I
 end
 
 @inline function (propagation::CUDAGraphPropagation)(prepared)
-    CUDA.launch(propagation.executable)
+    Proper.launch_cuda_graph!(propagation.execution)
     return propagation.intensity(prepared)
 end
 
@@ -18,21 +18,13 @@ function AdaptiveOpticsProperHIL.capture_cuda_optical_model(
     model::AdaptiveOpticsProperHIL.PreparedOpticalIntensityModel;
     warmup::Integer=10,
 )
-    warmup >= 0 || throw(ArgumentError("warmup must be nonnegative"))
-    for _ in 1:warmup
-        AdaptiveOpticsProperHIL.propagate_optics!(model)
-    end
-    CUDA.synchronize()
-
-    graph = CUDA.capture() do
-        AdaptiveOpticsProperHIL.propagate_optics!(model)
-    end
-    executable = CUDA.instantiate(graph)
-    CUDA.launch(executable)
-    CUDA.synchronize()
+    execution = Proper.prepare_cuda_graph(
+        model.propagate!,
+        model.prepared;
+        warmup,
+    )
     propagation = CUDAGraphPropagation(
-        graph,
-        executable,
+        execution,
         model.intensity,
     )
     return AdaptiveOpticsProperHIL.PreparedOpticalIntensityModel(

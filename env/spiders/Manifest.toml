@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "86bd3f6c3d5391119dcc92cce4576c6aefc84dea"
+project_hash = "65d190b2382b485d80fc3ed7b6896badc313afb4"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -46,6 +46,12 @@ deps = ["AdaptiveOpticsSim", "Base64", "BenchmarkTools", "Dates", "HdrHistogram"
 path = "../.."
 uuid = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
 version = "0.1.0"
+
+    [deps.AdaptiveOpticsProperHIL.extensions]
+    AdaptiveOpticsProperHILCUDAExt = "CUDA"
+
+    [deps.AdaptiveOpticsProperHIL.weakdeps]
+    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 
 [[deps.AdaptiveOpticsSim]]
 deps = ["AbstractFFTs", "FFTW", "FixedSizeArrays", "ForwardDiff", "KernelAbstractions", "LinearAlgebra", "Logging", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "TOML"]
@@ -502,7 +508,7 @@ version = "1.11.0"
 deps = ["AcceleratedKernels", "FFTW", "FITSIO", "KernelAbstractions", "LinearAlgebra", "Random", "Serialization", "Statistics"]
 path = "../../../Proper.jl"
 uuid = "0686a737-3bdd-44da-9bf7-6692cf630078"
-version = "0.2.0"
+version = "0.3.0"
 
     [deps.Proper.extensions]
     ProperAMDGPUExt = "AMDGPU"
