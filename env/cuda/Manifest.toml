@@ -46,6 +46,10 @@ deps = ["AdaptiveOpticsSim", "Base64", "BenchmarkTools", "Dates", "HdrHistogram"
 path = "../.."
 uuid = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
 version = "0.1.0"
+weakdeps = ["CUDA"]
+
+    [deps.AdaptiveOpticsProperHIL.extensions]
+    AdaptiveOpticsProperHILCUDAExt = "CUDA"
 
 [[deps.AdaptiveOpticsSim]]
 deps = ["AbstractFFTs", "FFTW", "FixedSizeArrays", "ForwardDiff", "KernelAbstractions", "LinearAlgebra", "Logging", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "TOML"]

@@ -59,9 +59,22 @@ export PreparedOpticalIntensityModel,
     propagate_optics!,
     optical_intensity,
     optical_sampling_m,
+    capture_cuda_optical_model,
     prepare_detector_hil,
     detector_hil_step!,
     detector_hil_frame
+
+"""
+    capture_cuda_optical_model(model; warmup=10)
+
+Capture one warmed [`PreparedOpticalIntensityModel`](@ref) propagation as a
+reusable CUDA Graph. CUDA.jl must be loaded so the package extension can
+provide this method. The returned model launches asynchronously and reuses the
+original prepared object, input buffers, intensity accessor, and sampling.
+Buffer contents may change in place; replacing buffers or changing the
+prepared propagation topology requires recapture.
+"""
+function capture_cuda_optical_model end
 
 export SpidersEvidenceLevel,
     SpidersDocumented,

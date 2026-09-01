@@ -376,6 +376,54 @@ CUDA on `spiders`:
 does not modify a dirty `AdaptiveOpticsSim.jl` checkout on the remote host.
 Proper is resolved from its pinned GitHub source revision.
 
+### CUDA Graph prepared propagation
+
+For a device-resident prepared optical model, load CUDA and capture the warmed
+propagation once during HIL setup:
+
+```julia
+using AdaptiveOpticsProperHIL
+using CUDA
+
+graph_model = capture_cuda_optical_model(optical_model; warmup=10)
+
+# Update the existing input arrays in place, then enqueue one propagation.
+propagate_optics!(graph_model)
+```
+
+The CUDA extension is optional; CUDA is not a hard dependency of this package.
+`propagate_optics!` on the captured model launches asynchronously so later
+same-stream device work can follow without an intermediate host barrier. Call
+`CUDA.synchronize()` only where the application needs completion on the host.
+The prepared arrays, FFT plans, grid, and control flow must retain their
+captured identities. Recapture after replacing buffers or changing propagation
+topology.
+
+The private SPIDERS-only experiment compares ordinary and graph-backed PROPER
+propagation while excluding the detector, camera, DM, and host/device transfer:
+
+```bash
+julia --project=env/spiders_cuda -e 'using Pkg; Pkg.instantiate()'
+julia --project=env/spiders_cuda scripts/benchmark_spiders_cuda_graph.jl 1024 100
+```
+
+On 2026-08-31, one 100-sample bracketed run on an NVIDIA GeForce RTX
+3050 Ti Laptop GPU (Julia 1.12.6, CUDA.jl 6.3.1) produced:
+
+| Synchronized propagation | Median | p95 | Mean rate | Host bytes/call |
+|---|---:|---:|---:|---:|
+| Direct, before graph | 13.850 ms | 14.344 ms | 71.651 Hz | 139,152 |
+| CUDA Graph | 13.744 ms | 13.910 ms | 72.800 Hz | 48 |
+| Direct, after graph | 14.002 ms | 14.132 ms | 71.398 Hz | 139,152 |
+
+The graph launch alone allocated zero host bytes; the remaining 48 bytes came
+from the explicit synchronization used by the benchmark. Relative L2 error
+against CPU was `2.9819694e-6` for the flat input and `2.963033e-6` after an
+in-place 10 nm OPD change. This supports using a graph to remove per-frame host
+launch construction and modestly tighten latency. It does not change the main
+1024-grid limit: the optical FFT workload still holds this GPU near 73 Hz. The
+run is host-specific integration evidence, not a portable performance claim.
+
 ## Current Reference Results
 
 The checked-in `results/*.json` files record short warmed steady-state

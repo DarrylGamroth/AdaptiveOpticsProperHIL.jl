@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "99cf9a6fee11d760b16e78f922147fca9fc40337"
+project_hash = "d6173d0a8d6730d0f45001f97cf0fba1f26d0a79"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -46,6 +46,12 @@ deps = ["AdaptiveOpticsSim", "Base64", "BenchmarkTools", "Dates", "HdrHistogram"
 path = "."
 uuid = "f8cf4d55-df09-4aa3-9f68-0fc7f08233f0"
 version = "0.1.0"
+
+    [deps.AdaptiveOpticsProperHIL.extensions]
+    AdaptiveOpticsProperHILCUDAExt = "CUDA"
+
+    [deps.AdaptiveOpticsProperHIL.weakdeps]
+    CUDA = "052768ef-5323-5732-b1bb-66c8b64840ba"
 
 [[deps.AdaptiveOpticsSim]]
 deps = ["AbstractFFTs", "FFTW", "FixedSizeArrays", "ForwardDiff", "KernelAbstractions", "LinearAlgebra", "Logging", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "TOML"]
