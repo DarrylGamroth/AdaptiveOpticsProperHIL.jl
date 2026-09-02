@@ -1,7 +1,7 @@
 using AdaptiveOpticsProperHIL
 using AdaptiveOpticsSim
 using Proper
-using SpidersProper
+using SPIDERSSim.ProperOptics
 
 const FULL_SENSOR_X = 320
 const FULL_SENSOR_Y = 256
@@ -39,14 +39,14 @@ function build_spiders_llowfs_hil(
     )
     beam_diameter_fraction = NATIVE_SAMPLING_BEAM_PRODUCT / gridsize
     residual_nm = zeros(Float32, 128, 128)
-    spiders_config = SpidersConfig(
+    propagation_configuration = SCCPropagationConfiguration(
         reference_pinhole=true,
         beam_diameter_fraction=beam_diameter_fraction,
     )
-    llowfs = prepare_llowfs(
+    llowfs = prepare_llowfs_propagation(
         1.55e-6,
         gridsize;
-        config=spiders_config,
+        configuration=propagation_configuration,
         ao_residual_nm=residual_nm,
         T=Float32,
     )
@@ -56,7 +56,7 @@ function build_spiders_llowfs_hil(
     )
     optical_model = PreparedOpticalIntensityModel(
         llowfs,
-        llowfs_propagate!,
+        propagate_llowfs!,
         llowfs_intensity,
         sampling_m,
     )
@@ -119,7 +119,7 @@ function main(args)
     context = build_spiders_llowfs_hil(gridsize, roi_mode, roi_x, roi_y)
     frame = detector_hil_step!(context.hil)
     detector_hil_step!(context.hil)
-    optical_allocations = @allocated llowfs_propagate!(context.llowfs)
+    optical_allocations = @allocated propagate_llowfs!(context.llowfs)
     combined_allocations = @allocated detector_hil_step!(context.hil)
 
     println("SPIDERS Zemax LLOWFS prepared HIL validation")

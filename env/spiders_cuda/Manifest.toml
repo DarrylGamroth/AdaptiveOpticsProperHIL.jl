@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "1ae8734f1d5fc49a4bc5a3da1ab441f394cec70b"
+project_hash = "c873d2124177f87f12f9753aa6ea69a83b99b367"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -756,6 +756,16 @@ version = "1.3.1"
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
 version = "0.7.0"
 
+[[deps.SPIDERSSim]]
+deps = ["AdaptiveOpticsProperHIL", "AdaptiveOpticsSim", "FFTW", "LinearAlgebra", "Proper", "Random", "Statistics"]
+path = "../../../SPIDERSSim.jl"
+uuid = "d82bf5a6-3898-47dc-96d7-ac4be980672a"
+version = "0.1.0"
+weakdeps = ["FITSIO"]
+
+    [deps.SPIDERSSim.extensions]
+    SPIDERSSimFITSIOExt = "FITSIO"
+
 [[deps.ScopedValues]]
 deps = ["HashArrayMappedTries", "Logging"]
 git-tree-sha1 = "67a144433c4ce877ee6d1ada69a124d6b1ecf7be"
@@ -786,12 +796,6 @@ version = "2.9.0"
 
     [deps.SpecialFunctions.weakdeps]
     ChainRulesCore = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-
-[[deps.SpidersProper]]
-deps = ["FFTW", "Proper", "Random", "Statistics"]
-path = "../../../../spidersProperPackage"
-uuid = "0b253062-30dc-4675-bf33-02fca2f5aefe"
-version = "0.1.0"
 
 [[deps.StaticArrays]]
 deps = ["LinearAlgebra", "PrecompileTools", "Random", "StaticArraysCore"]

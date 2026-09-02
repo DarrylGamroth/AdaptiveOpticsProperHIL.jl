@@ -2,7 +2,7 @@ using AdaptiveOpticsProperHIL
 using CUDA
 using LinearAlgebra: norm
 using Proper
-using SpidersProper
+using SPIDERSSim.ProperOptics
 using Statistics
 
 CUDA.functional() || error("CUDA is not functional on this host")
@@ -14,20 +14,22 @@ percentile_ms(values_ns, percentile) =
 to_device(::Nothing) = nothing
 to_device(array::AbstractArray) = CuArray(array)
 
-function to_device(entrance::SpidersProper.StaticSpidersEntrance)
-    return SpidersProper.StaticSpidersEntrance(to_device(entrance.field))
+function to_device(entrance::SPIDERSSim.ProperOptics.StaticPropagationEntrance)
+    return SPIDERSSim.ProperOptics.StaticPropagationEntrance(
+        to_device(entrance.field),
+    )
 end
 
-function to_device(entrance::SpidersProper.ResidualSpidersEntrance)
-    return SpidersProper.ResidualSpidersEntrance(
+function to_device(entrance::SPIDERSSim.ProperOptics.ResidualPropagationEntrance)
+    return SPIDERSSim.ProperOptics.ResidualPropagationEntrance(
         to_device(entrance.field),
         to_device(entrance.residual_nm),
         entrance.sampling_m,
     )
 end
 
-function to_device(entrance::SpidersProper.ExternalSpidersEntrance)
-    return SpidersProper.ExternalSpidersEntrance(
+function to_device(entrance::SPIDERSSim.ProperOptics.ExternalPropagationEntrance)
+    return SPIDERSSim.ProperOptics.ExternalPropagationEntrance(
         to_device(entrance.field),
         to_device(entrance.pupil_amplitude),
         to_device(entrance.opd_m),
@@ -41,20 +43,20 @@ function to_device(values::NamedTuple)
     return (; pairs...)
 end
 
-function to_device(prepared::PreparedLLOWFS)
+function to_device(prepared::PreparedLLOWFSPropagation)
     entrance = to_device(prepared.entrance)
     field = similar(entrance.field)
     context = Proper.RunContext(typeof(field))
     wavefront = prop_begin!(
         field,
-        prepared.config.telescope_diameter_m,
+        prepared.configuration.telescope_diameter_m,
         prop_get_wavelength(prepared.wavefront);
-        beam_diam_fraction=prepared.config.beam_diameter_fraction,
+        beam_diam_fraction=prepared.configuration.beam_diameter_fraction,
         context,
     )
-    device_prepared = PreparedLLOWFS(
-        prepared.config,
-        prepared.llowfs_config,
+    device_prepared = PreparedLLOWFSPropagation(
+        prepared.configuration,
+        prepared.relay_configuration,
         entrance,
         context,
         wavefront,
@@ -66,7 +68,7 @@ function to_device(prepared::PreparedLLOWFS)
         to_device(prepared.output),
         prepared.refractive_indices,
     )
-    llowfs_propagate!(device_prepared)
+    propagate_llowfs!(device_prepared)
     CUDA.synchronize()
     return device_prepared
 end
@@ -103,14 +105,14 @@ end
 
 function check_changed_input!(cpu_prepared, device_prepared, captured_model)
     fill!(cpu_prepared.entrance.opd_m, 0f0)
-    flat_reference = copy(llowfs_propagate!(cpu_prepared))
+    flat_reference = copy(propagate_llowfs!(cpu_prepared))
     fill!(device_prepared.entrance.opd_m, 0f0)
     propagate_optics!(captured_model)
     CUDA.synchronize()
     flat_relative_l2 = relative_l2(device_prepared.output, flat_reference)
 
     fill!(cpu_prepared.entrance.opd_m, 10f-9)
-    changed_reference = copy(llowfs_propagate!(cpu_prepared))
+    changed_reference = copy(propagate_llowfs!(cpu_prepared))
     fill!(device_prepared.entrance.opd_m, 10f-9)
     propagate_optics!(captured_model)
     CUDA.synchronize()
@@ -127,14 +129,14 @@ function main(args)
     beam_diameter_fraction = length(args) >= 3 ?
         parse(Float64, args[3]) : 0.1141323837216534
 
-    config = SpidersConfig(
+    configuration = SCCPropagationConfiguration(
         reference_pinhole=true,
         beam_diameter_fraction=beam_diameter_fraction,
     )
-    cpu_prepared = prepare_llowfs(
+    cpu_prepared = prepare_llowfs_propagation(
         1.55e-6,
         gridsize;
-        config,
+        configuration,
         pupil_amplitude=ones(Float32, 128, 128),
         pupil_sampling_m=7.92 / 128,
         opd_m=zeros(Float32, 128, 128),
@@ -144,7 +146,7 @@ function main(args)
     sampling_m = prop_get_sampling(device_prepared.wavefront)
     direct_model = PreparedOpticalIntensityModel(
         device_prepared,
-        llowfs_propagate!,
+        propagate_llowfs!,
         llowfs_intensity,
         sampling_m,
     )

@@ -146,6 +146,14 @@ benchmark evidence; use the instrument package for its profiles,
 prescriptions, graph files, and chopper API. This package retains only the
 reusable Proper and detector-HIL adapters.
 
+The detailed prepared optical paths formerly supplied by `SpidersProper.jl`
+now live in `SPIDERSSim.ProperOptics`. Use `prepare_scc_propagation` with
+`propagate_scc!` for the transmissive SCC branch and
+`prepare_llowfs_propagation` with `propagate_llowfs!` for the reflected-Lyot
+GoldEye branch. The separate `SPIDERSSim.prepare_scc` and
+`SPIDERSSim.prepare_llowfs` routines prepare RTC reconstruction calibrations,
+not optical propagation.
+
 `SPIDERSSim.jl/graphs/spiders_llowfs_hil.toml` and
 `SPIDERSSim.jl/graphs/spiders_scc_hil.toml` record the two
 external-RTC sensor topologies without embedding an RTC implementation:
