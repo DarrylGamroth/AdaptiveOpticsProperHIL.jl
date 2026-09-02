@@ -484,6 +484,13 @@ end
     return nothing
 end
 
+@inline function _AOG.graph_node_capture_capability(
+    owner::_ProperPropagationOwner,
+)
+    return isnothing(owner.state.prescription) ?
+        _AOG.GraphNodeCaptureSafe() : _AOG.GraphNodeCaptureUnsupported()
+end
+
 function _AOG.reset_graph_node!(owner::_ProperPropagationOwner)
     _reset_proper_state!(owner.plan.prescription, owner.state)
     reset_proper_assets!(owner.plan.prescription, owner.workspace.assets)

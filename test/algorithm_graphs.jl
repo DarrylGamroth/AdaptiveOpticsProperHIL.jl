@@ -23,6 +23,8 @@ include("algorithm_graph_fixture.jl")
         target=target,
     )
     owner = AlgorithmGraphs.prepared_graph_node(graph, :proper)
+    @test AlgorithmGraphs.graph_node_capture_capability(owner) isa
+        AlgorithmGraphs.GraphNodeCaptureSafe
     @test graph_name(graph) === :proper_test
     @test AdaptiveOpticsSim.Backends.compute_device(graph) == target
     @test owner.pupil_opd === pupil_opd
