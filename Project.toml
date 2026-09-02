@@ -26,7 +26,7 @@ AdaptiveOpticsProperHILCUDAExt = "CUDA"
 [sources]
 AdaptiveOpticsSim = {path = "../AdaptiveOpticsSim.jl"}
 HdrHistogram = {url = "https://github.com/DarrylGamroth/HdrHistogram.jl.git", rev = "cd42987e0739c06d29d20b4341f088b85e7a620c"}
-Proper = {url = "https://github.com/DarrylGamroth/Proper.jl.git", rev = "409171c1c3f12e869ac3b5484a269240dd4c0c7e"}
+Proper = {url = "https://github.com/DarrylGamroth/Proper.jl.git", rev = "f1aa417acd0176996769dcdfc8eda0de540d1f14"}
 
 [compat]
 AdaptiveOpticsSim = "0.1"
@@ -34,7 +34,7 @@ BenchmarkTools = "1.6"
 CUDA = "6"
 HdrHistogram = "0.4"
 JSON3 = "1"
-Proper = "0.3"
+Proper = "0.4"
 TOML = "1"
 julia = "1.12"
 

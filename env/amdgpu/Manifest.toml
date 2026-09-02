@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "880a5ba3b563e7019b6256340eecc8bd4832627a"
+project_hash = "1db921097397ccf0b2d8e6d0e06a4d202b025d79"
 
 [[deps.AMDGPU]]
 deps = ["AbstractFFTs", "AcceleratedKernels", "Adapt", "Atomix", "BFloat16s", "CEnum", "ExprTools", "GPUArrays", "GPUCompiler", "GPUToolbox", "KernelAbstractions", "LLD_jll", "LLVM", "LLVM_jll", "Libdl", "LinearAlgebra", "Pkg", "PrecompileTools", "Preferences", "PrettyTables", "Printf", "ROCmDeviceLibs_jll", "Random", "Random123", "RandomNumbers", "SparseArrays", "StaticArraysCore", "Statistics", "UnsafeAtomics"]
@@ -629,11 +629,11 @@ version = "1.11.0"
 
 [[deps.Proper]]
 deps = ["AcceleratedKernels", "FFTW", "FITSIO", "KernelAbstractions", "LinearAlgebra", "Random", "Serialization", "Statistics"]
-git-tree-sha1 = "66f9046730da71535945a434b405dbf1aa971476"
-repo-rev = "409171c1c3f12e869ac3b5484a269240dd4c0c7e"
+git-tree-sha1 = "0d2f6270b34fd0bb9712c51fb23fa380e800215f"
+repo-rev = "f1aa417acd0176996769dcdfc8eda0de540d1f14"
 repo-url = "https://github.com/DarrylGamroth/Proper.jl.git"
 uuid = "0686a737-3bdd-44da-9bf7-6692cf630078"
-version = "0.3.0"
+version = "0.4.0"
 
     [deps.Proper.extensions]
     ProperAMDGPUExt = "AMDGPU"

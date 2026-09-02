@@ -2,7 +2,7 @@
 
 julia_version = "1.12.7"
 manifest_format = "2.0"
-project_hash = "65d190b2382b485d80fc3ed7b6896badc313afb4"
+project_hash = "98b43f1417bb24c90fb9aaf3e17ce8c59d2c6ff7"
 
 [[deps.AbstractFFTs]]
 deps = ["LinearAlgebra"]
@@ -508,7 +508,7 @@ version = "1.11.0"
 deps = ["AcceleratedKernels", "FFTW", "FITSIO", "KernelAbstractions", "LinearAlgebra", "Random", "Serialization", "Statistics"]
 path = "../../../Proper.jl"
 uuid = "0686a737-3bdd-44da-9bf7-6692cf630078"
-version = "0.3.0"
+version = "0.4.0"
 
     [deps.Proper.extensions]
     ProperAMDGPUExt = "AMDGPU"

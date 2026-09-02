@@ -394,7 +394,7 @@ propagate_optics!(graph_model)
 ```
 
 The CUDA extension is optional; CUDA is not a hard dependency of this package.
-The HIL wrapper delegates capture and launch to Proper 0.3's general CUDA Graph
+The HIL wrapper delegates capture and launch to Proper's general CUDA Graph
 executor, so the same prepared propagation also works without AdaptiveOpticsSim.
 `propagate_optics!` on the captured model launches asynchronously so later
 same-stream device work can follow without an intermediate host barrier. Call
