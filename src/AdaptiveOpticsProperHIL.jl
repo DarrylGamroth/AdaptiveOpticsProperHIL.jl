@@ -76,41 +76,6 @@ prepared propagation topology requires recapture.
 """
 function capture_cuda_optical_model end
 
-export SpidersEvidenceLevel,
-    SpidersDocumented,
-    SpidersDeploymentConfigured,
-    SpidersInferred,
-    SpidersPlaceholder,
-    SpidersProfileClaim,
-    SpidersFocalPlaneMask,
-    SpidersGalilAlignment,
-    SpidersFilterSelection,
-    SpidersOpticalGeometry,
-    ProvisionalSpidersProfile,
-    provisional_spiders_h_regular_profile,
-    spiders_profile_claims,
-    spiders_profile_is_provisional,
-    SpidersSurrogateParameters,
-    SpidersChopperPhase,
-    SpidersUnfringed,
-    SpidersFringed,
-    SpidersChopperPlan,
-    SpidersChopperFrameStatus,
-    ProvisionalSpidersLLOWFSPrescription,
-    ProvisionalSpidersSCCPrescription,
-    ProvisionalSpidersChoppedSCCPrescription,
-    PROVISIONAL_SPIDERS_LLOWFS_SCHEMA,
-    PROVISIONAL_SPIDERS_SCC_SCHEMA,
-    PROVISIONAL_SPIDERS_CHOPPED_SCC_SCHEMA,
-    provisional_spiders_llowfs_configuration,
-    provisional_spiders_scc_configuration,
-    provisional_spiders_chopped_scc_configuration,
-    spiders_chopper_frame_status,
-    spiders_chopper_sequence,
-    spiders_chopper_phase,
-    spiders_prescription_claims,
-    spiders_configuration_claims
-
 struct HILPayload{O,P,T}
     opd_m::O
     pupil::P
@@ -432,8 +397,5 @@ include("latency_histograms.jl")
 include("external_rtc.jl")
 include("prepared_detector_hil.jl")
 include("proper_algorithm.jl")
-include("spiders_provisional.jl")
-include("spiders_prescriptions.jl")
-include("spiders_chopper.jl")
 
 end

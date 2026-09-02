@@ -140,14 +140,14 @@ budget and applies the DM surface itself.
 
 ## SPIDERS HIL Topology
 
-SPIDERS is one instrument scenario in this package, not the package boundary.
-The reusable boundary remains any prepared PROPER intensity model connected to
-AdaptiveOpticsSim or to an AOS algorithm graph. `SpidersProper.jl` owns the
-private SPIDERS optical prescription; this repository owns its cross-package
-validation, detector handoff, RTC topology, and benchmark evidence.
+SPIDERS instrument code has moved to `SPIDERSSim.jl`. The material in this
+section records the original cross-package validation, detector handoff, and
+benchmark evidence; use the instrument package for its profiles,
+prescriptions, graph files, and chopper API. This package retains only the
+reusable Proper and detector-HIL adapters.
 
-[`spiders_llowfs_hil.toml`](examples/graphs/spiders_llowfs_hil.toml) and
-[`spiders_scc_hil.toml`](examples/graphs/spiders_scc_hil.toml) record the two
+`SPIDERSSim.jl/graphs/spiders_llowfs_hil.toml` and
+`SPIDERSSim.jl/graphs/spiders_scc_hil.toml` record the two
 external-RTC sensor topologies without embedding an RTC implementation:
 
 ```text
@@ -170,7 +170,7 @@ node_types = merge(
 )
 
 llowfs_definition = load_algorithm_graph(
-    "examples/graphs/spiders_llowfs_hil.toml";
+    "../SPIDERSSim.jl/graphs/spiders_llowfs_hil.toml";
     node_types,
     bindings=(
         pupil_opd=llowfs_pupil_opd,
@@ -178,7 +178,7 @@ llowfs_definition = load_algorithm_graph(
     ),
 )
 scc_definition = load_algorithm_graph(
-    "examples/graphs/spiders_scc_hil.toml";
+    "../SPIDERSSim.jl/graphs/spiders_scc_hil.toml";
     node_types,
     bindings=(
         pupil_opd=scc_pupil_opd,
@@ -222,6 +222,8 @@ by the SPIDERS optical design. It is explicitly not a qualified instrument
 configuration:
 
 ```julia
+using SPIDERSSim
+
 profile = provisional_spiders_h_regular_profile(Float32)
 
 llowfs_configuration = provisional_spiders_llowfs_configuration(profile)
