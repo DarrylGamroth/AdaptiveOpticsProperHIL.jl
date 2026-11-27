@@ -141,15 +141,15 @@ budget and applies the DM surface itself.
 ## SPIDERS HIL Topology
 
 SPIDERS instrument definitions, optical prescriptions, simulation profiles and
-calibration recipes are maintained in
-[adaptive-optics-simulations](https://github.com/DarrylGamroth/adaptive-optics-simulations/tree/main/spiders).
-Use that repository's shared build, run and calibration commands for the
-instrument. This package provides reusable Proper and detector-HIL adapters.
+calibration recipes live in the instrument checkout. Use its shared build, run
+and calibration commands. This package provides reusable Proper and detector-HIL
+adapters. [AdaptiveOpticsSimPipeWireHIL](https://github.com/DarrylGamroth/AdaptiveOpticsSimPipeWireHIL)
+provides the PipeWireAO transport.
 
-For instrument regression checks, use the monorepo's
-[SPIDERS optical validation](https://github.com/DarrylGamroth/adaptive-optics-simulations/blob/main/test/spiders-optics.jl)
-and [captured CUDA camera-to-DM selector](https://github.com/DarrylGamroth/adaptive-optics-simulations/blob/main/test/spiders_dual_performance.jl).
-The LLOWFS and SCC branches retain separate complete-frame acquisition rates.
+For instrument regression checks, run `test/spiders-optics.jl` and
+`test/spiders_dual_performance.jl` from the instrument checkout. They cover
+optical validation and captured camera-to-DM exchange, respectively. The
+LLOWFS and SCC branches retain separate complete-frame acquisition rates.
 
 ## GPU Validation
 
